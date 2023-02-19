@@ -1,8 +1,6 @@
-import torch
+class AbtractActor:
+    def sample(self, state):
+        raise NotImplementedError
 
-class AbtractActor(torch.nn.Module):
-    def sample(self):
-        raise RuntimeError
-
-    def step(self, state, action, reward, next_state):
-        raise RuntimeError
+    def step(self, experiences):
+        raise NotImplementedError

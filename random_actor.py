@@ -4,8 +4,8 @@ class RandomActor(AbtractActor):
     def __init__(self, env):
         self.env = env
 
-    def sample(self):
+    def sample(self, state):
         return self.env.action_space.sample()
 
-    def train(self, *args):
+    def step(self, *args):
         pass
