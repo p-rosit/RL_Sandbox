@@ -1,6 +1,6 @@
-from abstract_actor import AbtractActor
+from abstract_actor import AbstractActor
 
-class RandomActor(AbtractActor):
+class RandomActor(AbstractActor):
     def __init__(self, env):
         super().__init__()
         self.env = env
