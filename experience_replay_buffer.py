@@ -1,5 +1,8 @@
 import numpy as np
+import torch
+from collections import namedtuple
 
+Transition = namedtuple('Transition', ('state', 'action', 'reward', 'next_state'))
 rng = np.random.default_rng()
 
 class ReplayBuffer:
@@ -12,7 +15,12 @@ class ReplayBuffer:
         return len(self.buffer)
 
     def append(self, state, action, reward, next_state):
-        experience = (state, action, reward, next_state)
+        state = torch.tensor(state).unsqueeze(0)
+        action = torch.tensor(action).unsqueeze(0)
+        reward = torch.tensor(reward).unsqueeze(0)
+        next_state = torch.tensor(next_state).unsqueeze(0) if next_state is not None else None
+
+        experience = Transition(state, action, reward, next_state)
 
         if len(self.buffer) < self.max_size:
             self.buffer.append(experience)

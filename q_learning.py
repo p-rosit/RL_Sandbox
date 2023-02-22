@@ -1,13 +1,14 @@
 import numpy as np
 import torch
 from torch import nn
+from experience_replay_buffer import Transition
 from abstract_actor import AbstractActor
 from actor_wrappers import SoftUpdateModel
 
 import matplotlib.pyplot as plt
 
 class DenseQLearningActor(AbstractActor):
-    def __init__(self, input_size, layer_sizes, output_size, discount=0.99):
+    def __init__(self, input_size, layer_sizes, output_size, discount=0.99, tau=0.005):
         super().__init__()
         layers = (input_size, *layer_sizes, output_size)
 
@@ -19,12 +20,7 @@ class DenseQLearningActor(AbstractActor):
 
         self.discount = discount
         self.policy_network = nn.Sequential(*network)
-        self.target_network = SoftUpdateModel(self.policy_network, tau=0.4)
-        # self.ind = 0
-        self.history = []
-
-        self.fig = plt.figure(2)
-        self.ax = self.fig.subplots()
+        self.target_network = SoftUpdateModel(self.policy_network, tau=tau)
 
     def sample(self, state):
         values = self.policy_network(torch.from_numpy(state))
@@ -34,30 +30,23 @@ class DenseQLearningActor(AbstractActor):
         return self.policy_network.parameters()
 
     def step(self, experiences):
-        # if self.ind > 10:
-        #     self.ind = 0
-        #     # self.target_network = deepcopy(self.network)
-        #
-        #     # self.ax.cla()
-        #     # self.ax.plot(np.convolve(self.history, np.ones(100) / 100, 'valid'))
-        #     # plt.draw()
-        #     # plt.pause(0.001)
-        #
-        # self.ind += 1
+        batch_experiences = Transition(*zip(*experiences))
 
-        # states = torch.tensor(np.array([state for state, _, _, _ in experiences]))
-        # actions = torch.tensor(np.array([action for _, action, _, _ in experiences]))
-        # rewards = torch.tensor(np.array([reward for _, _, reward, _ in experiences]), dtype=torch.float32)
-        # next_states = torch.tensor(np.array([next_state for _, _, _, next_state in experiences]))
-        states, actions, rewards, next_states, non_final_mask = super()._step(experiences)
+        states = torch.cat(batch_experiences.state, dim=0)
+        actions = torch.cat(batch_experiences.action, dim=0)
+        rewards = torch.cat(batch_experiences.reward, dim=0)
 
+        non_final_mask = torch.tensor([next_state is not None for next_state in batch_experiences.next_state], dtype=torch.bool)
+        non_final_next_states = torch.cat([next_state for next_state in batch_experiences.next_state if next_state is not None])
+
+        state_action_values = self.policy_network(states).gather(1, actions.unsqueeze(-1))
+
+        next_state_action_values = torch.zeros_like(rewards)
         with torch.no_grad():
-            targets = rewards + self.discount * self.target_network(next_states).max(dim=1)[0]
-        # targets = rewards + self.discount * self.network(next_states).max(dim=1)[0]
-        estimate = self.policy_network(states).take(actions)
+            next_state_action_values[non_final_mask] = self.target_network(non_final_next_states).max(dim=1)[0]
+        targets = rewards + self.discount * next_state_action_values
 
-        loss = self.criterion(estimate, targets)
-        self.history.append(loss.item())
+        loss = self.criterion(state_action_values.squeeze(), targets)
         self.optimizer.zero_grad()
         loss.backward()
 

@@ -31,6 +31,7 @@ class Discrete2Continuous(AbstractActor):
 
 class MultiActor(AbstractActor):
     def __init__(self, *actors, p=[]):
+        super().__init__()
         self.actors = actors
         self.p = p
         if len(self.actors) != len(self.p):
@@ -72,7 +73,7 @@ class AnnealActor(AbstractActor):
         eps = self.eps_end + (self.eps_start - self.eps_end) * np.exp(-1. * self.curr_step / self.decay_steps)
         self.curr_step += 1
 
-        if self.curr_step < self.start_steps or rng.uniform() < eps:
+        if self.curr_step < self.start_steps or rng.random() < eps:
             return self.replacement_actor.sample(state)
         else:
             return self.actor.sample(state)
@@ -89,9 +90,8 @@ class AnnealActor(AbstractActor):
     def step(self, *args):
         self.actor.step(*args)
 
-class SoftUpdateModel(AbstractActor):
+class SoftUpdateModel:
     def __init__(self, actor, tau=0.005):
-        super().__init__()
         self.actor = deepcopy(actor)
         self.tau = tau
 
@@ -107,18 +107,3 @@ class SoftUpdateModel(AbstractActor):
             self.actor.load_state_dict(target_state_dict)
         except KeyError:
             raise KeyError('Saved model and new model do not have the same parameters.')
-
-    def sample(self, state):
-        raise RuntimeError('Soft update of model should not be used to sample policy.')
-
-    def set_optimizer(self, optimizer):
-        raise AttributeError('Class %s does not require an optimizer.' % self.__class__.__name__)
-
-    def set_criterion(self, criterion):
-        raise AttributeError('Class %s does not require a criterion.' % self.__class__.__name__)
-
-    def parameters(self):
-        raise AttributeError('Class %s does not have any parameters.' % self.__class__.__name__)
-
-    def step(self, *args):
-        raise RuntimeError('Soft update of model should not be trained directly.')
