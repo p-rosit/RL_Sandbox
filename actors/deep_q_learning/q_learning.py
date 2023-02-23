@@ -36,14 +36,14 @@ class DenseQLearningActor(AbstractActor):
         non_final_mask = torch.tensor([next_state is not None for next_state in batch_experiences.next_state], dtype=torch.bool)
         non_final_next_states = torch.cat([next_state for next_state in batch_experiences.next_state if next_state is not None])
 
-        state_action_values = self.policy_network(states).gather(1, actions)
+        estimated_action_values = self.policy_network(states).gather(1, actions)
 
-        next_state_action_values = torch.zeros_like(rewards)
+        estimated_next_action_values = torch.zeros_like(rewards)
         with torch.no_grad():
-            next_state_action_values[non_final_mask] = self.target_network(non_final_next_states).max(dim=1)[0]
-        targets = rewards + self.discount * next_state_action_values
+            estimated_next_action_values[non_final_mask] = self.target_network(non_final_next_states).max(dim=1)[0]
+        bellman_action_values = rewards + self.discount * estimated_next_action_values
 
-        loss = self.criterion(state_action_values, targets.unsqueeze(1))
+        loss = self.criterion(estimated_action_values.squeeze(), bellman_action_values)
         self.optimizer.zero_grad()
         loss.backward()
 

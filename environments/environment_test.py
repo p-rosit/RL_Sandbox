@@ -14,6 +14,7 @@ import numpy as np
 
 def main():
     # env = gym.make("LunarLander-v2", render_mode="human")
+    # env = gym.make("LunarLander-v2")
     # env = gym.make("CartPole-v1", render_mode="human")
     env = gym.make("CartPole-v1")
     buffer = ReplayBuffer(max_size=10000)

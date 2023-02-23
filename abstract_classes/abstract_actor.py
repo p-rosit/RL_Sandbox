@@ -4,8 +4,15 @@ from experience_replay_buffer import Transition
 
 class AbstractActor:
     def __init__(self):
+        self.training = True
         self.optimizer = None
         self.criterion = None
+
+    def train(self):
+        self.training = True
+
+    def eval(self):
+        self.training = False
 
     def sample(self, state):
         raise NotImplementedError

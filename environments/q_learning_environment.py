@@ -14,9 +14,9 @@ import matplotlib.pyplot as plt
 def main():
     # env = gym.make("LunarLander-v2", render_mode="human")
     env = gym.make("CartPole-v1")
-    buffer = ReplayBuffer(max_size=10000)
+    buffer = ReplayBuffer(max_size=50000)
 
-    batch_size = 128
+    batch_size = 256
     gamma = 0.99
     eps_start = 0.9
     eps_end = 0.05
@@ -24,7 +24,7 @@ def main():
     start_steps = 1000
     tau = 0.005
     lr = 1e-4
-    num_episodes = 10000
+    num_episodes = 600
 
     r = RandomActor(env)
 

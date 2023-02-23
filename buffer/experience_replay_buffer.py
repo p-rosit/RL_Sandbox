@@ -1,5 +1,4 @@
 import numpy as np
-import random
 from collections import namedtuple
 
 Transition = namedtuple('Transition', ('state', 'action', 'reward', 'next_state'))
@@ -15,11 +14,6 @@ class ReplayBuffer:
         return len(self.buffer)
 
     def append(self, state, action, reward, next_state):
-        # state = torch.tensor(state).unsqueeze(0)
-        # action = torch.tensor(action).unsqueeze(0)
-        # reward = torch.tensor(reward).unsqueeze(0)
-        # next_state = torch.tensor(next_state).unsqueeze(0) if next_state is not None else None
-
         experience = Transition(state, action, reward, next_state)
 
         if len(self.buffer) < self.max_size:
@@ -31,7 +25,6 @@ class ReplayBuffer:
 
     def sample(self, batch_size=1):
         return [self.buffer[ind] for ind in rng.choice(len(self.buffer), batch_size)]
-        # return random.sample(self.buffer, batch_size)
 
 if __name__ == '__main__':
     b = ReplayBuffer(max_size=2)

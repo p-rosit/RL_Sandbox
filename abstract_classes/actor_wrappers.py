@@ -70,11 +70,14 @@ class AnnealActor(AbstractActor):
         self.curr_step = 0
 
     def sample(self, state):
-        eps = self.eps_end + (self.eps_start - self.eps_end) * np.exp(-1. * (self.curr_step - self.start_steps) / self.decay_steps)
-        self.curr_step += 1
+        if self.training:
+            eps = self.eps_end + (self.eps_start - self.eps_end) * np.exp(-1. * (self.curr_step - self.start_steps) / self.decay_steps)
+            self.curr_step += 1
 
-        if self.curr_step <= self.start_steps or rng.random() < eps:
-            return self.replacement_actor.sample(state)
+            if self.curr_step <= self.start_steps or rng.random() < eps:
+                return self.replacement_actor.sample(state)
+            else:
+                return self.actor.sample(state)
         else:
             return self.actor.sample(state)
 
