@@ -10,7 +10,6 @@ from q_learning import DenseQLearningActor
 from actor_wrappers import AnnealActor
 
 import matplotlib.pyplot as plt
-import numpy as np
 
 def main():
     # env = gym.make("LunarLander-v2", render_mode="human")
@@ -22,56 +21,56 @@ def main():
     eps_start = 0.9
     eps_end = 0.05
     eps_decay = 1000
+    start_steps = 1000
     tau = 0.005
     lr = 1e-4
+    num_episodes = 10000
 
-    actor = RandomActor(env)
+    r = RandomActor(env)
 
-    q = DenseQLearningActor(4, [128], 2, discount=gamma, tau=tau)
+    q = DenseQLearningActor(4, [128, 128], 2, discount=gamma, tau=tau)
     q.set_criterion(nn.SmoothL1Loss())
     q.set_optimizer(optim.AdamW(q.parameters(), lr=lr, amsgrad=True))
 
-    sq = AnnealActor(q, actor, eps_start=eps_start, eps_end=eps_end, decay_steps=eps_decay)
+    sq = AnnealActor(q, r, start_steps=start_steps, eps_start=eps_start, eps_end=eps_end, decay_steps=eps_decay)
 
-    episode_reward = []
     episode_length = []
-    r = 0
     fig = plt.figure(1)
     ax = fig.subplots()
 
-    step = 0
-    prev_observation, info = env.reset(seed=42)
-    for _ in range(100000):
-        step += 1
-        action = sq.sample(prev_observation)
-        observation, reward, terminated, truncated, info = env.step(action)
-        done = terminated or truncated
+    for _ in range(num_episodes):
+        done = False
+        step = 0
+        state, info = env.reset()
+        state = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
 
-        if terminated:
-            observation = None
+        while not done:
+            step += 1
+            action = sq.sample(state)
+            observation, reward, terminated, truncated, _ = env.step(action.item())
+            reward = torch.tensor([reward])
+            done = terminated or truncated
 
-        buffer.append(prev_observation, action, reward, observation)
+            if terminated:
+                next_state = None
+            else:
+                next_state = torch.tensor(observation, dtype=torch.float32).unsqueeze(0)
 
-        r += reward
+            buffer.append(state, action, reward, next_state)
+            state = next_state
 
-        if len(buffer) > batch_size:
-            sq.step(buffer.sample(batch_size))
+            if len(buffer) > batch_size:
+                sq.step(buffer.sample(batch_size))
 
-        if done:
-            episode_length.append(step)
-            step = 0
+            if done:
+                episode_length.append(step + 1)
 
-            episode_reward.append(r)
-            ax.cla()
-            # ax.plot(np.convolve(episode_reward, np.ones(10) / 10, 'valid'))
-            ax.plot(np.convolve(episode_length, np.ones(10) / 10, 'valid'))
-            plt.draw()
-            plt.pause(0.001)
+                ax.cla()
+                ax.plot(episode_length)
+                plt.draw()
+                plt.pause(0.0001)
+                break
 
-            observation, info = env.reset()
-            r = 0
-
-        prev_observation = observation
     env.close()
 
 if __name__ == '__main__':

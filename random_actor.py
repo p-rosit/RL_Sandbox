@@ -1,3 +1,4 @@
+import torch
 from abstract_actor import AbstractActor
 
 class RandomActor(AbstractActor):
@@ -6,7 +7,7 @@ class RandomActor(AbstractActor):
         self.env = env
 
     def sample(self, state):
-        return self.env.action_space.sample()
+        return torch.tensor(self.env.action_space.sample(), dtype=torch.long).view(1, 1)
 
     def set_optimizer(self, optimizer):
         raise AttributeError("Class %s does not require an optimizer." % self.__class__.__name__)

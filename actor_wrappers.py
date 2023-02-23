@@ -30,7 +30,7 @@ class Discrete2Continuous(AbstractActor):
         self.actor.step(discrete_experiences)
 
 class MultiActor(AbstractActor):
-    def __init__(self, *actors, p=[]):
+    def __init__(self, *actors, p=None):
         super().__init__()
         self.actors = actors
         self.p = p
@@ -70,10 +70,10 @@ class AnnealActor(AbstractActor):
         self.curr_step = 0
 
     def sample(self, state):
-        eps = self.eps_end + (self.eps_start - self.eps_end) * np.exp(-1. * self.curr_step / self.decay_steps)
+        eps = self.eps_end + (self.eps_start - self.eps_end) * np.exp(-1. * (self.curr_step - self.start_steps) / self.decay_steps)
         self.curr_step += 1
 
-        if self.curr_step < self.start_steps or rng.random() < eps:
+        if self.curr_step <= self.start_steps or rng.random() < eps:
             return self.replacement_actor.sample(state)
         else:
             return self.actor.sample(state)
