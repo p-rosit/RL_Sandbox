@@ -1,5 +1,5 @@
 import numpy as np
-from abstract_actor import AbstractActor
+from core.abstract_actor import AbstractActor
 from copy import deepcopy
 
 rng = np.random.default_rng()

@@ -1,7 +1,3 @@
-import torch
-import numpy as np
-from experience_replay_buffer import Transition
-
 class AbstractActor:
     def __init__(self):
         self.training = True

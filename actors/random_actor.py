@@ -1,5 +1,5 @@
 import torch
-from abstract_actor import AbstractActor
+from core.abstract_actor import AbstractActor
 
 class RandomActor(AbstractActor):
     def __init__(self, env):

@@ -3,11 +3,11 @@ from torch import nn
 from torch import optim
 import gymnasium as gym
 
-from experience_replay_buffer import ReplayBuffer
+from buffer.experience_replay_buffer import ReplayBuffer
 
-from random_actor import RandomActor
-from q_learning import DenseQLearningActor
-from actor_wrappers import AnnealActor
+from actors.random_actor import RandomActor
+from actors.deep_q_learning.q_learning import DenseQLearningActor
+from core.actor_wrappers import AnnealActor
 
 import matplotlib.pyplot as plt
 
