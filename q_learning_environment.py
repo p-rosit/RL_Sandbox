@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 def main():
     # env = gym.make("LunarLander-v2", render_mode="human")
     env = gym.make("CartPole-v1")
-    buffer = ReplayBuffer(max_size=50000)
+    buffer = ReplayBuffer(max_size=10000)
 
     batch_size = 256
     gamma = 0.99

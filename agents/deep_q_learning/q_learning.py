@@ -21,8 +21,7 @@ class DenseQLearningAgent(AbstractAgent):
         self.max_grad = max_grad
 
     def sample(self, state):
-        values = self.policy_network(state)
-        return torch.argmax(values, dim=1).view(1, 1)
+        return self.policy_network(state).argmax(dim=1).view(1, 1)
 
     def parameters(self):
         return self.policy_network.parameters()

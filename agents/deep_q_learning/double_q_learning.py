@@ -1,6 +1,5 @@
 import torch
 from torch import nn
-from collections import OrderedDict
 from buffer.transitions import Transition
 from core.abstract_agent import AbstractAgent
 
@@ -41,23 +40,20 @@ class DoubleQLearningAgent(AbstractAgent):
     def parameters(self):
         return *self.policy_network_1.parameters(), *self.policy_network_2.parameters()
 
-    def _update_network(self, policy_network, target_network, experiences):
+    def _compute_loss(self, policy_network, target_network, experiences):
         states, actions, rewards, non_final_next_states, non_final_mask = experiences
 
         estimated_action_values = policy_network(states).gather(1, actions).squeeze()
 
         estimated_next_action_values = torch.zeros_like(rewards)
         with torch.no_grad():
-            estimated_next_actions = policy_network(non_final_next_states).argmax(dim=1).view(1, -1)
-            estimated_next_action_values[non_final_mask] = target_network(non_final_next_states).gather(1, estimated_next_actions)
-        bellman_action_values = (rewards + self.discount * estimated_next_action_values).detach()
+            estimated_next_actions = policy_network(non_final_next_states).argmax(dim=1).view(-1, 1)
+            estimated_next_values = target_network(non_final_next_states)
+            estimated_next_action_values[non_final_mask] = estimated_next_values.gather(1, estimated_next_actions).squeeze()
 
-        loss = self.criterion(estimated_action_values, bellman_action_values)
-        self.optimizer.zero_grad()
-        loss.backward()
+        bellman_action_values = rewards + self.discount * estimated_next_action_values
 
-        torch.nn.utils.clip_grad_value_(policy_network.parameters(), self.max_grad)
-        self.optimizer.step()
+        return self.criterion(estimated_action_values, bellman_action_values)
 
     def step(self, experiences):
         batch_experiences = Transition(*zip(*experiences))
@@ -71,7 +67,15 @@ class DoubleQLearningAgent(AbstractAgent):
 
         experiences = (states, actions, rewards, non_final_next_states, non_final_mask)
 
+        loss = torch.tensor([0], dtype=torch.float64)
+
         if torch.rand(1) < 0.5:
-            self._update_network(self.policy_network_1, self.policy_network_2, experiences)
+            loss += self._compute_loss(self.policy_network_1, self.policy_network_2, experiences)
         else:
-            self._update_network(self.policy_network_2, self.policy_network_1, experiences)
+            loss += self._compute_loss(self.policy_network_2, self.policy_network_1, experiences)
+
+        self.optimizer.zero_grad()
+        loss.backward()
+
+        torch.nn.utils.clip_grad_value_(self.parameters(), self.max_grad)
+        self.optimizer.step()
