@@ -1,7 +1,7 @@
 import torch
-from core.abstract_actor import AbstractActor
+from core.abstract_agent import AbstractAgent
 
-class RandomActor(AbstractActor):
+class RandomAgent(AbstractAgent):
     def __init__(self, env):
         super().__init__()
         self.env = env

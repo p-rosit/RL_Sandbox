@@ -5,9 +5,10 @@ import gymnasium as gym
 
 from buffer.experience_replay_buffer import ReplayBuffer
 
-from actors.random_actor import RandomActor
-from actors.deep_q_learning.q_learning import DenseQLearningActor
-from core.actor_wrappers import AnnealActor
+from agents.random_agent import RandomAgent
+from agents.deep_q_learning.q_learning import DenseQLearningAgent
+from agents.deep_q_learning.double_q_learning import DoubleQLearningAgent
+from core.agent_wrappers import AnnealAgent
 
 import matplotlib.pyplot as plt
 
@@ -26,13 +27,14 @@ def main():
     lr = 1e-4
     num_episodes = 600
 
-    r = RandomActor(env)
+    r = RandomAgent(env)
 
-    q = DenseQLearningActor(4, [128, 128], 2, discount=gamma, tau=tau)
+    # q = DenseQLearningAgent(4, [128, 128], 2, discount=gamma, tau=tau)
+    q = DoubleQLearningAgent(4, [128, 128], 2, discount=gamma)
     q.set_criterion(nn.SmoothL1Loss())
     q.set_optimizer(optim.AdamW(q.parameters(), lr=lr, amsgrad=True))
 
-    sq = AnnealActor(q, r, start_steps=start_steps, eps_start=eps_start, eps_end=eps_end, decay_steps=eps_decay)
+    sq = AnnealAgent(q, r, start_steps=start_steps, eps_start=eps_start, eps_end=eps_end, decay_steps=eps_decay)
 
     episode_length = []
     fig = plt.figure(1)

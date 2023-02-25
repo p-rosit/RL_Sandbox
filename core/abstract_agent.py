@@ -1,4 +1,4 @@
-class AbstractActor:
+class AbstractAgent:
     def __init__(self):
         self.training = True
         self.optimizer = None
@@ -27,3 +27,13 @@ class AbstractActor:
 
     def step(self, experiences):
         raise NotImplementedError
+
+class AbstractOptimizerFreeAgent(AbstractAgent):
+    def set_optimizer(self, optimizer):
+        raise AttributeError("Class %s does not require an optimizer." % self.__class__.__name__)
+
+    def set_criterion(self, criterion):
+        raise AttributeError("Class %s does not require a criterion." % self.__class__.__name__)
+
+    def parameters(self):
+        raise AttributeError("Class %s does not have any parameters." % self.__class__.__name__)

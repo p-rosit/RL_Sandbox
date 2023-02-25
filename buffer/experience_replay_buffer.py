@@ -1,7 +1,6 @@
 import numpy as np
-from collections import namedtuple
+from buffer.transitions import Transition
 
-Transition = namedtuple('Transition', ('state', 'action', 'reward', 'next_state'))
 rng = np.random.default_rng()
 
 class ReplayBuffer:
