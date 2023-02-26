@@ -194,7 +194,7 @@ class ClippedDoubleQLearning(AbstractAgent):
         estimated_action_values_1 = self.policy_network_1(states).gather(1, actions).squeeze()
         estimated_action_values_2 = self.policy_network_2(states).gather(1, actions).squeeze()
 
-        estimated_next_action_values = torch.zeros_like(rewards)
+        estimated_next_action_values = torch.zeros_like(rewards, dtype=torch.float64)
         with torch.no_grad():
             estimated_next_values_1, _ = self.target_network_1(non_final_next_states).max(dim=1)
             estimated_next_values_2, _ = self.target_network_2(non_final_next_states).max(dim=1)

@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 
 def main():
     # env = gym.make("LunarLander-v2", render_mode="human")
+    # env = gym.make("LunarLander-v2")
     env = gym.make("CartPole-v1")
     buffer = ReplayBuffer(max_size=50000)
 
@@ -44,6 +45,7 @@ def main():
     for _ in range(num_episodes):
         done = False
         step = 0
+        curr_reward = 0
         state, info = env.reset()
         state = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
 
@@ -51,6 +53,7 @@ def main():
             step += 1
             action = sq.sample(state)
             observation, reward, terminated, truncated, _ = env.step(action.item())
+            curr_reward += reward
             reward = torch.tensor([reward])
             done = terminated or truncated
 
@@ -66,7 +69,9 @@ def main():
                 sq.step(buffer.sample(batch_size))
 
             if done:
-                episode_length.append(step + 1)
+                # episode_length.append(step + 1)
+                episode_length.append(curr_reward)
+                curr_reward = 0
 
                 ax.cla()
                 ax.plot(episode_length)
