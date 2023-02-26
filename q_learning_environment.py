@@ -6,8 +6,7 @@ import gymnasium as gym
 from buffer.experience_replay_buffer import ReplayBuffer
 
 from agents.random_agent import RandomAgent
-from agents.deep_q_learning.q_learning import DenseQLearningAgent
-from agents.deep_q_learning.double_q_learning import DoubleQLearningAgent, ModifiedDoubleQLearningAgent, ClippedDoubleQLearning
+from agents.off_policy.deep_q_learning.double_q_learning import ClippedDoubleQLearning
 from core.agent_wrappers import AnnealAgent
 
 import matplotlib.pyplot as plt
