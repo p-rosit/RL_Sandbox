@@ -7,7 +7,7 @@ from buffer.experience_replay_buffer import ReplayBuffer
 
 from agents.random_agent import RandomAgent
 from agents.deep_q_learning.q_learning import DenseQLearningAgent
-from agents.deep_q_learning.double_q_learning import DoubleQLearningAgent, ModifiedDoubleQLearningAgent
+from agents.deep_q_learning.double_q_learning import DoubleQLearningAgent, ModifiedDoubleQLearningAgent, ClippedDoubleQLearning
 from core.agent_wrappers import AnnealAgent
 
 import matplotlib.pyplot as plt
@@ -31,7 +31,8 @@ def main():
 
     # q = DenseQLearningAgent(4, [128, 128], 2, discount=gamma, tau=tau)
     # q = DoubleQLearningAgent(4, [128, 128], 2, discount=gamma, tau=tau)
-    q = ModifiedDoubleQLearningAgent(4, [128, 128], 2, discount=gamma, tau=tau)
+    # q = ModifiedDoubleQLearningAgent(4, [128, 128], 2, discount=gamma, tau=tau)
+    q = ClippedDoubleQLearning(4, [128, 128], 2, discount=gamma, tau=tau)
     q.set_criterion(nn.SmoothL1Loss())
     q.set_optimizer(optim.AdamW(q.parameters(), lr=lr, amsgrad=True))
 
