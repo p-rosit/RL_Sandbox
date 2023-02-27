@@ -1,12 +1,6 @@
 import torch
+from buffer.transitions import batch_transitions
 from core.abstract_agent import AbstractAgent
-
-def network_step(loss, parameters, optimizer, max_grad):
-    optimizer.zero_grad()
-    loss.backward()
-
-    torch.nn.utils.clip_grad_value_(parameters, max_grad)
-    optimizer.step()
 
 class AbstractQLearningAgent(AbstractAgent):
     def __init__(self, discount=0.99, max_grad=100):
@@ -22,8 +16,13 @@ class AbstractQLearningAgent(AbstractAgent):
     def parameters(self):
         return self.policy_network.parameters()
 
-    def step(self, loss):
-        network_step(loss, self.parameters(), self.optimizer, self.max_grad)
+    def _compute_loss(self, policy_network, target_network, experiences):
+        raise NotImplementedError
+
+    def step(self, experiences):
+        experiences = batch_transitions(experiences)
+        loss = self._compute_loss(self.policy_network, self.target_network, experiences)
+        super()._step(loss)
 
 class AbstractDoubleQLearningAgent(AbstractAgent):
     def __init__(self, discount=0.99, max_grad=100):
@@ -52,8 +51,16 @@ class AbstractDoubleQLearningAgent(AbstractAgent):
     def parameters(self):
         return *self.policy_network_1.parameters(), *self.policy_network_2.parameters()
 
-    def step(self, loss):
-        network_step(loss, self.parameters(), self.optimizer, self.max_grad)
+    def _compute_loss(self, policy_network, target_network, states, actions, rewards, non_final_next_states, non_final_mask):
+        raise NotImplementedError
+
+    def step(self, experiences):
+        experiences = batch_transitions(experiences)
+
+        loss_1 = self._compute_loss(self.policy_network_1, self.target_network_2, *experiences)
+        loss_2 = self._compute_loss(self.policy_network_2, self.target_network_1, *experiences)
+
+        super()._step(loss_1 + loss_2)
 
 class AbstractMultiQlearningAgent(AbstractAgent):
     def __init__(self, discount=0.99, max_grad=100):
@@ -72,4 +79,4 @@ class AbstractMultiQlearningAgent(AbstractAgent):
                 yield param
 
     def step(self, loss):
-        network_step(loss, self.parameters(), self.optimizer, self.max_grad)
+        network_step(loss, self.optimizer, self.parameters(), self.max_grad)

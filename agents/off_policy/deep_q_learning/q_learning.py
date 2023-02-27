@@ -1,6 +1,5 @@
 import torch
 from torch import nn
-from buffer.transitions import batch_transitions
 from agents.off_policy.deep_q_learning.abstract_q_learning_agent import AbstractQLearningAgent
 from core.network_wrappers import SoftUpdateModel
 
@@ -18,18 +17,17 @@ class QLearningAgent(AbstractQLearningAgent):
         self.policy_network = nn.Sequential(*network)
         self.target_network = SoftUpdateModel(self.policy_network, tau=tau)
 
-    def step(self, experiences):
-        states, actions, rewards, non_final_next_states, non_final_mask = batch_transitions(experiences)
+    def _compute_loss(self, policy_network, target_network, experiences):
+        states, actions, rewards, non_final_next_states, non_final_mask = experiences
+        estimated_action_values = policy_network(states).gather(1, actions).squeeze()
 
-        estimated_next_action_values = torch.zeros_like(rewards)
         with torch.no_grad():
-            estimated_next_action_values[non_final_mask], _ = self.target_network(non_final_next_states).max(dim=1)
+            estimated_next_action_values, _ = self.target_network(non_final_next_states).max(dim=1)
+        bellman_action_values = rewards
+        bellman_action_values[non_final_mask] += self.discount * estimated_next_action_values
 
-        estimated_action_values = self.policy_network(states).gather(1, actions).squeeze()
-        bellman_action_values = rewards + self.discount * estimated_next_action_values
+        return self.criterion(estimated_action_values, bellman_action_values)
 
-        loss = self.criterion(estimated_action_values, bellman_action_values)
-
-        super().step(loss)
-
+    def step(self, experiences):
+        super().step(experiences)
         self.target_network.update(self.policy_network)

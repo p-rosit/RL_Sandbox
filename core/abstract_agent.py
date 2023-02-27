@@ -1,8 +1,11 @@
+import torch
+
 class AbstractAgent:
     def __init__(self):
         self.training = True
         self.optimizer = None
         self.criterion = None
+        self.max_grad = torch.inf
 
     def train(self):
         self.training = True
@@ -25,15 +28,27 @@ class AbstractAgent:
     def parameters(self):
         raise NotImplementedError
 
+    def _step(self, loss):
+        self.optimizer.zero_grad()
+        loss.backward()
+        torch.nn.utils.clip_grad_value_(self.parameters(), self.max_grad)
+        self.optimizer.step()
+
     def step(self, experiences):
         raise NotImplementedError
 
 class AbstractOptimizerFreeAgent(AbstractAgent):
-    def set_optimizer(self, optimizer):
+    def set_optimizer(self, _):
         raise AttributeError("Class %s does not require an optimizer." % self.__class__.__name__)
 
-    def set_criterion(self, criterion):
+    def set_criterion(self, _):
         raise AttributeError("Class %s does not require a criterion." % self.__class__.__name__)
 
     def parameters(self):
         raise AttributeError("Class %s does not have any parameters." % self.__class__.__name__)
+
+    def _step(self, _):
+        raise AttributeError("Class %s cannot be updated." % self.__class__.__name__)
+
+    def step(self, _):
+        raise AttributeError("Class %s cannot be updated." % self.__class__.__name__)
