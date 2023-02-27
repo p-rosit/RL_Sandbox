@@ -1,21 +1,12 @@
 import torch
-from torch import nn
 from agents.off_policy.deep_q_learning.abstract_q_learning_agent import AbstractQLearningAgent
 from core.network_wrappers import SoftUpdateModel
 
 class QLearningAgent(AbstractQLearningAgent):
-    def __init__(self, input_size, layer_sizes, output_size, discount=0.99, tau=0.005, max_grad=100):
+    def __init__(self, policy_network, discount=0.99, tau=0.005, max_grad=100):
         super().__init__(discount=discount, max_grad=max_grad)
-        layers = (input_size, *layer_sizes, output_size)
-
-        network = []
-        for size_in, size_out in zip(layers[:-1], layers[1:]):
-            network.append(nn.Linear(size_in, size_out))
-            network.append(nn.ReLU())
-        network.pop()
-
-        self.policy_network = nn.Sequential(*network)
-        self.target_network = SoftUpdateModel(self.policy_network, tau=tau)
+        self.policy_network = policy_network
+        self.target_network = SoftUpdateModel(policy_network, tau=tau)
 
     def _compute_loss(self, policy_network, target_network, experiences):
         states, actions, rewards, non_final_next_states, non_final_mask = experiences

@@ -5,6 +5,8 @@ import gymnasium as gym
 
 from buffer.experience_replay_buffer import ReplayBuffer
 
+from networks.DenseNetwork import DenseNetwork
+
 from agents.random_agent import RandomAgent
 from agents.off_policy.deep_q_learning.q_learning import QLearningAgent
 from agents.off_policy.deep_q_learning.double_q_learning import DoubleQLearningAgent, ModifiedDoubleQLearningAgent, ClippedDoubleQLearning
@@ -30,10 +32,13 @@ def main():
 
     r = RandomAgent(env)
 
-    # q = QLearningAgent(4, [128, 128], 2, discount=gamma, tau=tau)
-    # q = DoubleQLearningAgent(4, [128, 128], 2, discount=gamma, tau=tau)
-    # q = ModifiedDoubleQLearningAgent(4, [128, 128], 2, discount=gamma, tau=tau)
-    q = ClippedDoubleQLearning(4, [128, 128], 2, discount=gamma, tau=tau)
+    net_1 = DenseNetwork(4, [128, 128], 2)
+    net_2 = DenseNetwork(4, [128, 128], 2)
+
+    # q = QLearningAgent(net_1, discount=gamma, tau=tau)
+    # q = DoubleQLearningAgent(net_1, net_2, discount=gamma, tau=tau)
+    # q = ModifiedDoubleQLearningAgent(net_1, discount=gamma, tau=tau)
+    q = ClippedDoubleQLearning(net_1, net_2, discount=gamma, tau=tau)
     q.set_criterion(nn.SmoothL1Loss())
     q.set_optimizer(optim.AdamW(q.parameters(), lr=lr, amsgrad=True))
 
