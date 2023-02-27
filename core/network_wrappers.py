@@ -1,8 +1,8 @@
 from copy import deepcopy
 
 class SoftUpdateModel:
-    def __init__(self, actor, tau=0.005):
-        self.actor = deepcopy(actor)
+    def __init__(self, network, tau=0.005):
+        self.actor = deepcopy(network)
         self.tau = tau
 
     def __call__(self, x):
