@@ -4,21 +4,25 @@ from agents.off_policy.deep_q_learning.abstract_q_learning_agent import Abstract
 from core.network_wrappers import SoftUpdateModel
 
 class DoubleQLearningAgent(AbstractDoubleQLearningAgent):
-    def __init__(self, policy_network_1, policy_network_2, discount=0.99, tau=0.005, max_grad=100):
+    def __init__(self, policy_network_1, policy_network_2, discount=0.99, tau=0.005, max_grad=100, policy_train=True):
         super().__init__(discount=discount, max_grad=max_grad)
+        self.policy_train = policy_train
         self.policy_network_1 = policy_network_1
         self.target_network_1 = SoftUpdateModel(policy_network_1, tau=tau)
 
         self.policy_network_2 = policy_network_2
         self.target_network_2 = SoftUpdateModel(policy_network_2, tau=tau)
 
-    def _compute_loss(self, policy_network, target_network, states, actions, rewards, non_final_next_states, non_final_mask):
+    def _compute_loss(self, policy_network, target_network_1, target_network_2, states, actions, rewards, non_final_next_states, non_final_mask):
         estimated_action_values = policy_network(states).gather(1, actions).squeeze()
 
         with torch.no_grad():
-            estimated_next_actions = policy_network(non_final_next_states).argmax(dim=1).view(-1, 1)
+            if self.policy_train:
+                estimated_next_actions = policy_network(non_final_next_states).argmax(dim=1).view(-1, 1)
+            else:
+                estimated_next_actions = target_network_1(non_final_next_states).argmax(dim=1).view(-1, 1)
 
-            estimated_next_values = target_network(non_final_next_states)
+            estimated_next_values = target_network_2(non_final_next_states)
             estimated_next_action_values = estimated_next_values.gather(1, estimated_next_actions).squeeze()
 
         bellman_action_values = rewards.clone()
@@ -67,7 +71,7 @@ class ClippedDoubleQLearning(AbstractDoubleQLearningAgent):
         self.policy_network_2 = policy_network_2
         self.target_network_2 = SoftUpdateModel(policy_network_2, tau=tau)
 
-    def _compute_loss(self, policy_network, target_network, states, actions, rewards, non_final_next_states, non_final_mask):
+    def _compute_loss(self, policy_network, target_network_1, target_network_2, states, actions, rewards, non_final_next_states, non_final_mask):
         estimated_action_values = policy_network(states).gather(1, actions).squeeze()
         return self.criterion(estimated_action_values, self.bellman_action_values)
 

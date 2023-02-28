@@ -51,14 +51,14 @@ class AbstractDoubleQLearningAgent(AbstractAgent):
     def parameters(self):
         return *self.policy_network_1.parameters(), *self.policy_network_2.parameters()
 
-    def _compute_loss(self, policy_network, target_network, states, actions, rewards, non_final_next_states, non_final_mask):
+    def _compute_loss(self, policy_network, target_network_1, target_network_2, states, actions, rewards, non_final_next_states, non_final_mask):
         raise NotImplementedError
 
     def step(self, experiences):
         experiences = batch_transitions(experiences)
 
-        loss_1 = self._compute_loss(self.policy_network_1, self.target_network_2, *experiences)
-        loss_2 = self._compute_loss(self.policy_network_2, self.target_network_1, *experiences)
+        loss_1 = self._compute_loss(self.policy_network_1, self.target_network_1, self.target_network_2, *experiences)
+        loss_2 = self._compute_loss(self.policy_network_2, self.target_network_2, self.target_network_1, *experiences)
 
         super()._step(loss_1 + loss_2)
 
@@ -72,7 +72,7 @@ class AbstractMultiQlearningAgent(AbstractAgent):
 
     def sample(self, state):
         if self.training:
-            ind = torch.randint(len(self.policy_networks))
+            ind = torch.randint(len(self.policy_networks), (1,))
             return self.policy_networks[ind].get_action(state).view(-1, 1)
         else:
             # fix vectorization
@@ -85,7 +85,7 @@ class AbstractMultiQlearningAgent(AbstractAgent):
             for param in policy_network.parameters():
                 yield param
 
-    def _compute_loss(self, ind, policy_network, states, actions, rewards, non_final_next_states, non_final_mask):
+    def _compute_loss(self, ind, states, actions, rewards, non_final_next_states, non_final_mask):
         raise NotImplementedError
 
     def step(self, experiences):
@@ -93,6 +93,6 @@ class AbstractMultiQlearningAgent(AbstractAgent):
 
         loss = torch.tensor([0.0])
         for ind, policy_network in enumerate(self.policy_networks):
-            loss += self._compute_loss(ind, policy_network, *experiences)
+            loss += self._compute_loss(ind, *experiences)
 
         super()._step(loss)

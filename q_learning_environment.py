@@ -10,14 +10,15 @@ from networks.DenseNetwork import DenseNetwork
 from agents.random_agent import RandomAgent
 from agents.off_policy.deep_q_learning.q_learning import QLearningAgent
 from agents.off_policy.deep_q_learning.double_q_learning import DoubleQLearningAgent, ModifiedDoubleQLearningAgent, ClippedDoubleQLearning
+from agents.off_policy.deep_q_learning.multi_q_learning import MultiQLearningAgent
 from core.agent_wrappers import AnnealAgent
 
 import matplotlib.pyplot as plt
 
 def main():
     # env = gym.make("LunarLander-v2", render_mode="human")
-    # env = gym.make("LunarLander-v2")
-    env = gym.make("CartPole-v1")
+    env = gym.make("LunarLander-v2")
+    # env = gym.make("CartPole-v1")
     buffer = ReplayBuffer(max_size=50000)
 
     batch_size = 256
@@ -32,13 +33,16 @@ def main():
 
     r = RandomAgent(env)
 
-    net_1 = DenseNetwork(4, [128, 128], 2)
-    net_2 = DenseNetwork(4, [128, 128], 2)
+    net_1 = DenseNetwork(8, [128, 128], 4)
+    net_2 = DenseNetwork(8, [128, 128], 4)
+    net_3 = DenseNetwork(8, [128, 128], 4)
+    net_4 = DenseNetwork(8, [128, 128], 4)
 
     # q = QLearningAgent(net_1, discount=gamma, tau=tau)
-    # q = DoubleQLearningAgent(net_1, net_2, discount=gamma, tau=tau)
+    # q = DoubleQLearningAgent(net_1, net_2, discount=gamma, tau=tau, policy_train=False)
     # q = ModifiedDoubleQLearningAgent(net_1, discount=gamma, tau=tau)
-    q = ClippedDoubleQLearning(net_1, net_2, discount=gamma, tau=tau)
+    # q = ClippedDoubleQLearning(net_1, net_2, discount=gamma, tau=tau)
+    q = MultiQLearningAgent(net_1, net_2, net_3, net_4, discount=gamma, tau=tau, policy_train=False)
     q.set_criterion(nn.SmoothL1Loss())
     q.set_optimizer(optim.AdamW(q.parameters(), lr=lr, amsgrad=True))
 
