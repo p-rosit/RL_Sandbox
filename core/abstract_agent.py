@@ -16,9 +16,6 @@ class AbstractAgent:
     def sample(self, state):
         raise NotImplementedError
 
-    def state_dict(self):
-        raise NotImplementedError
-
     def set_optimizer(self, optimizer):
         self.optimizer = optimizer
 
@@ -45,7 +42,7 @@ class AbstractOptimizerFreeAgent(AbstractAgent):
         raise AttributeError("Class %s does not require a criterion." % self.__class__.__name__)
 
     def parameters(self):
-        raise AttributeError("Class %s does not have any parameters." % self.__class__.__name__)
+        raise AttributeError("Class %s does not have any trainable parameters." % self.__class__.__name__)
 
     def _step(self, _):
         raise AttributeError("Class %s cannot be updated." % self.__class__.__name__)
