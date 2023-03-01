@@ -1,6 +1,6 @@
 import torch
 from buffer.transitions import batch_transitions
-from agents.off_policy.deep_q_learning.abstract_q_learning_agent import AbstractMultiQlearningAgent
+from core.abstract_q_learning_agent import AbstractMultiQlearningAgent
 from core.network_wrappers import SoftUpdateModel
 
 class MultiQLearningAgent(AbstractMultiQlearningAgent):
@@ -28,8 +28,9 @@ class MultiQLearningAgent(AbstractMultiQlearningAgent):
 
             estimated_next_actions = estimated_next_actions.view(1, -1, 1).repeat(len(self.target_networks), 1, 1)
 
-            estimated_next_action_values = self.estimated_next_action_values.gather(2, estimated_next_actions).sum(dim=0)
-            estimated_next_action_values -= self.estimated_next_action_values[ind].gather(1, estimated_next_actions[ind])
+            estimated_next_action_values = self.estimated_next_action_values[:ind].gather(2, estimated_next_actions[:ind]).sum(dim=0)
+            estimated_next_action_values += self.estimated_next_action_values[ind+1:].gather(2, estimated_next_actions[ind+1:]).sum(dim=0)
+
             estimated_next_action_values /= len(self.target_networks) - 1
             estimated_next_action_values = estimated_next_action_values.view(-1)
 

@@ -1,5 +1,5 @@
 import torch
-from agents.off_policy.deep_q_learning.abstract_q_learning_agent import AbstractQLearningAgent
+from core.abstract_q_learning_agent import AbstractQLearningAgent
 from core.network_wrappers import SoftUpdateModel
 
 class QLearningAgent(AbstractQLearningAgent):

@@ -7,7 +7,9 @@ class RandomAgent(AbstractAgent):
         self.env = env
 
     def sample(self, state):
-        return torch.tensor(self.env.action_space.sample(), dtype=torch.long).view(1, 1)
+        env_action = self.env.action_space.sample()
+        policy_action = torch.tensor(env_action, dtype=torch.long).view(1, 1)
+        return policy_action, env_action
 
     def set_optimizer(self, optimizer):
         raise AttributeError("Class %s does not require an optimizer." % self.__class__.__name__)

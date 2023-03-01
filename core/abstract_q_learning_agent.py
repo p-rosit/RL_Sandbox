@@ -11,7 +11,8 @@ class AbstractQLearningAgent(AbstractAgent):
         self.max_grad = max_grad
 
     def sample(self, state):
-        return self.policy_network.get_action(state).view(-1, 1)
+        policy_action, env_action = self.policy_network.action(state)
+        return policy_action.view(-1, 1), env_action
 
     def parameters(self):
         return self.policy_network.parameters()
@@ -37,16 +38,20 @@ class AbstractDoubleQLearningAgent(AbstractAgent):
     def sample(self, state):
         if self.training:
             if torch.rand(1) < 0.5:
-                return self.policy_network_1.get_action(state).view(-1, 1)
+                policy_action, env_action = self.policy_network_1.action(state)
             else:
-                return self.policy_network_2.get_action(state).view(-1, 1)
+                policy_action, env_action = self.policy_network_2.action(state)
         else:
-            action_1, value_1 = self.policy_network_1.get_action_value(state)
-            action_2, value_2 = self.policy_network_2.get_action_value(state)
+            value_1, action_1, env_action_1 = self.policy_network_1.action_value(state)
+            value_2, action_2, env_action_2 = self.policy_network_2.action_value(state)
             if value_1 > value_2:
-                return action_1.view(-1, 1)
+                policy_action = action_1
+                env_action = env_action_1
             else:
-                return action_2.view(-1, 1)
+                policy_action = action_2
+                env_action = env_action_2
+
+        return policy_action.view(-1, 1), env_action
 
     def parameters(self):
         return *self.policy_network_1.parameters(), *self.policy_network_2.parameters()
@@ -73,12 +78,13 @@ class AbstractMultiQlearningAgent(AbstractAgent):
     def sample(self, state):
         if self.training:
             ind = torch.randint(len(self.policy_networks), (1,))
-            return self.policy_networks[ind].get_action(state).view(-1, 1)
+            policy_action, env_action = self.policy_networks[ind].action(state)
         else:
             # fix vectorization
             actions = [policy_network.get_action_value(state) for policy_network in self.policy_networks]
-            action, value = max(actions, key=lambda x: x[0])
-            return action.view(-1, 1)
+            _, policy_action, env_action = max(actions, key=lambda x: x[0])
+
+        return policy_action.view(-1, 1), env_action
 
     def parameters(self):
         for policy_network in self.policy_networks:
