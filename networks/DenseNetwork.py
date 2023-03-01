@@ -17,8 +17,12 @@ class DenseNetwork(AbstractNetwork):
     def forward(self, x):
         return self.network(x)
 
-    def get_action(self, state):
-        return self.forward(state).argmax(dim=1)
+    def action(self, state):
+        policy_action = self.forward(state).argmax(dim=1)
+        env_action = policy_action.item()
+        return policy_action, env_action
 
-    def get_action_value(self, state):
-        return tuple(reversed(self.forward(state).max(dim=1)))
+    def action_value(self, state):
+        action_value, policy_action = self.forward(state).max(dim=1)
+        env_action = policy_action.item()
+        return action_value, policy_action, env_action
