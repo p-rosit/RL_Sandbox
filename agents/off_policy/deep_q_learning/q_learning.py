@@ -1,6 +1,6 @@
 import torch
-from core.abstract_q_learning_agent import AbstractQLearningAgent
-from core.network_wrappers import SoftUpdateModel
+from core.agents.abstract_q_learning_agent import AbstractQLearningAgent
+from core.wrapper.network_wrappers import SoftUpdateModel
 
 class QLearningAgent(AbstractQLearningAgent):
     def __init__(self, policy_network, discount=0.99, tau=0.005, max_grad=100):

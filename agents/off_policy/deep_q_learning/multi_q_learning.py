@@ -1,7 +1,7 @@
 import torch
 from buffer.transitions import batch_transitions
-from core.abstract_q_learning_agent import AbstractMultiQlearningAgent
-from core.network_wrappers import SoftUpdateModel
+from core.agents.abstract_q_learning_agent import AbstractMultiQlearningAgent
+from core.wrapper.network_wrappers import SoftUpdateModel
 
 class MultiQLearningAgent(AbstractMultiQlearningAgent):
     def __init__(self, *networks, discount=0.99, tau=0.005, max_grad=100, policy_train=False):

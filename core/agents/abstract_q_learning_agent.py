@@ -1,6 +1,6 @@
 import torch
 from buffer.transitions import batch_transitions
-from core.abstract_agent import AbstractAgent
+from core.agents.abstract_agent import AbstractAgent
 
 class AbstractQLearningAgent(AbstractAgent):
     def __init__(self, discount=0.99, max_grad=100):

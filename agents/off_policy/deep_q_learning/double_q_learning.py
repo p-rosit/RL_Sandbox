@@ -1,7 +1,7 @@
 import torch
 from buffer.transitions import batch_transitions
-from core.abstract_q_learning_agent import AbstractQLearningAgent, AbstractDoubleQLearningAgent
-from core.network_wrappers import SoftUpdateModel
+from core.agents.abstract_q_learning_agent import AbstractQLearningAgent, AbstractDoubleQLearningAgent
+from core.wrapper.network_wrappers import SoftUpdateModel
 
 class DoubleQLearningAgent(AbstractDoubleQLearningAgent):
     def __init__(self, policy_network_1, policy_network_2, discount=0.99, tau=0.005, max_grad=100, policy_train=True):

@@ -1,4 +1,3 @@
-import torch
 from torch import nn
 from torch import optim
 import gymnasium as gym
@@ -12,7 +11,7 @@ from agents.random_agent import RandomAgent
 from agents.off_policy.deep_q_learning.q_learning import QLearningAgent
 from agents.off_policy.deep_q_learning.double_q_learning import DoubleQLearningAgent, ModifiedDoubleQLearningAgent, ClippedDoubleQLearning
 from agents.off_policy.deep_q_learning.multi_q_learning import MultiQLearningAgent
-from core.agent_wrappers import AnnealAgent
+from core.wrapper.agent_wrappers import AnnealAgent
 
 def main():
     # env = gym.make("LunarLander-v2", render_mode="human")
@@ -38,11 +37,11 @@ def main():
     net_3 = DenseNetwork(4, [128, 128], 2)
     net_4 = DenseNetwork(4, [128, 128], 2)
 
-    q = QLearningAgent(net_1, discount=gamma, tau=tau)
+    # q = QLearningAgent(net_1, discount=gamma, tau=tau)
     # q = DoubleQLearningAgent(net_1, net_2, discount=gamma, tau=tau, policy_train=False)
     # q = ModifiedDoubleQLearningAgent(net_1, discount=gamma, tau=tau)
     # q = ClippedDoubleQLearning(net_1, net_2, discount=gamma, tau=tau)
-    # q = MultiQLearningAgent(net_1, net_2, net_3, net_4, discount=gamma, tau=tau, policy_train=False)
+    q = MultiQLearningAgent(net_1, net_2, net_3, net_4, discount=gamma, tau=tau, policy_train=False)
     q.set_criterion(nn.SmoothL1Loss())
     q.set_optimizer(optim.AdamW(q.parameters(), lr=lr, amsgrad=True))
 

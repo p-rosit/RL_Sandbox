@@ -1,5 +1,5 @@
 import torch
-from core.abstract_agent import AbstractAgent, AbstractOptimizerFreeAgent
+from core.agents.abstract_agent import AbstractAgent, AbstractOptimizerFreeAgent
 
 class Discrete2Continuous(AbstractAgent):
     def __init__(self, agent, remap):

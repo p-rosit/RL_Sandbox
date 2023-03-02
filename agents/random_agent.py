@@ -1,5 +1,5 @@
 import torch
-from core.abstract_agent import AbstractAgent
+from core.agents.abstract_agent import AbstractAgent
 
 class RandomAgent(AbstractAgent):
     def __init__(self, env):
