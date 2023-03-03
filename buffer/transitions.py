@@ -16,3 +16,8 @@ def batch_transitions(experiences):
                                   dtype=torch.bool)
 
     return states, actions, rewards, non_final_next_states, non_final_mask
+
+ActionTransition = namedtuple('ActionTransition', ('action', 'reward'))
+
+def batch_action_transition(experiences):
+    raise NotImplementedError

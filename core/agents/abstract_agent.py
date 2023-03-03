@@ -1,10 +1,11 @@
 import torch
 
 class AbstractAgent:
-    def __init__(self, max_grad=torch.inf):
+    def __init__(self, discount=0.99, max_grad=torch.inf):
         self.training = True
         self.optimizer = None
         self.criterion = None
+        self.discount = discount
         self.max_grad = max_grad
 
     def train(self):
@@ -23,6 +24,9 @@ class AbstractAgent:
         self.criterion = criterion
 
     def parameters(self):
+        raise NotImplementedError
+
+    def _compute_loss(self, *args, **kwargs):
         raise NotImplementedError
 
     def _step(self, loss):

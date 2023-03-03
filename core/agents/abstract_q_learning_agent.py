@@ -4,10 +4,9 @@ from core.agents.abstract_agent import AbstractAgent
 
 class AbstractQLearningAgent(AbstractAgent):
     def __init__(self, discount=0.99, max_grad=100):
-        super().__init__(max_grad=max_grad)
+        super().__init__(discount=discount, max_grad=max_grad)
         self.policy_network = None
         self.target_network = None
-        self.discount = discount
 
     def sample(self, state):
         policy_action, env_action = self.policy_network.action(state)
@@ -30,12 +29,11 @@ class AbstractQLearningAgent(AbstractAgent):
 
 class AbstractDoubleQLearningAgent(AbstractAgent):
     def __init__(self, discount=0.99, max_grad=100):
-        super().__init__(max_grad=max_grad)
+        super().__init__(discount=discount, max_grad=max_grad)
         self.policy_network_1 = None
         self.policy_network_2 = None
         self.target_network_1 = None
         self.target_network_2 = None
-        self.discount = discount
 
     def sample(self, state):
         if self.training:
@@ -73,10 +71,9 @@ class AbstractDoubleQLearningAgent(AbstractAgent):
 
 class AbstractMultiQlearningAgent(AbstractAgent):
     def __init__(self, discount=0.99, max_grad=100):
-        super().__init__(max_grad=max_grad)
+        super().__init__(discount=discount, max_grad=max_grad)
         self.policy_networks = None
         self.target_networks = None
-        self.discount = discount
 
     def sample(self, state):
         if self.training:

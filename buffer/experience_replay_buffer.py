@@ -1,12 +1,13 @@
 import numpy as np
 from buffer.transitions import Transition
+from buffer.abstract_buffer import AbstractBuffer
 
 rng = np.random.default_rng()
 
-class ReplayBuffer:
+class ReplayBuffer(AbstractBuffer):
     def __init__(self, max_size=1000):
+        super().__init__(max_size=max_size)
         self.ind = 0
-        self.max_size = max_size
         self.buffer = []
 
     def __len__(self):
@@ -24,6 +25,9 @@ class ReplayBuffer:
 
     def sample(self, batch_size=1):
         return [self.buffer[ind] for ind in rng.choice(len(self.buffer), batch_size)]
+
+    def clear(self):
+        self.buffer = []
 
 if __name__ == '__main__':
     b = ReplayBuffer(max_size=2)
