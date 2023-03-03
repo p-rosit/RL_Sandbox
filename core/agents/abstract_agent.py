@@ -1,11 +1,11 @@
 import torch
 
 class AbstractAgent:
-    def __init__(self):
+    def __init__(self, max_grad=torch.inf):
         self.training = True
         self.optimizer = None
         self.criterion = None
-        self.max_grad = torch.inf
+        self.max_grad = max_grad
 
     def train(self):
         self.training = True

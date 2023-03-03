@@ -1,5 +1,4 @@
 import torch
-from buffer.transitions import batch_transitions
 from core.agents.abstract_q_learning_agent import AbstractMultiQlearningAgent
 from core.wrapper.network_wrappers import SoftUpdateModel
 
@@ -39,8 +38,8 @@ class MultiQLearningAgent(AbstractMultiQlearningAgent):
 
         return self.criterion(estimated_action_values, bellman_action_values)
 
-    def step(self, experiences):
-        _, _, _, non_final_next_states, _ = batch_transitions(experiences)
+    def _step(self, experiences):
+        _, _, _, non_final_next_states, _ = experiences
 
         estimated_next_action_values = []
         with torch.no_grad():
@@ -49,7 +48,7 @@ class MultiQLearningAgent(AbstractMultiQlearningAgent):
                 estimated_next_action_values.append(vals)
         self.estimated_next_action_values = torch.cat(estimated_next_action_values, dim=0)
 
-        super().step(experiences)
+        super()._step(experiences)
 
         for policy_network, target_network in zip(self.policy_networks, self.target_networks):
             target_network.update(policy_network)

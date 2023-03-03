@@ -19,6 +19,6 @@ class QLearningAgent(AbstractQLearningAgent):
 
         return self.criterion(estimated_action_values, bellman_action_values)
 
-    def step(self, experiences):
-        super().step(experiences)
+    def _step(self, experiences):
+        super()._step(experiences)
         self.target_network.update(self.policy_network)

@@ -1,5 +1,4 @@
 import torch
-from buffer.transitions import batch_transitions
 from core.agents.abstract_q_learning_agent import AbstractQLearningAgent, AbstractDoubleQLearningAgent
 from core.wrapper.network_wrappers import SoftUpdateModel
 
@@ -13,16 +12,20 @@ class DoubleQLearningAgent(AbstractDoubleQLearningAgent):
         self.policy_network_2 = policy_network_2
         self.target_network_2 = SoftUpdateModel(policy_network_2, tau=tau)
 
-    def _compute_loss(self, policy_network, target_network_1, target_network_2, states, actions, rewards, non_final_next_states, non_final_mask):
+    def _compute_loss(self, ind, states, actions, rewards, non_final_next_states, non_final_mask):
+        policy_network = self.policy_network_1 if ind == 0 else self.policy_network_2
+        target_network = self.target_network_2 if ind == 0 else self.target_network_1
+        if self.policy_train:
+            action_network = self.policy_network_1 if ind == 0 else self.policy_network_2
+        else:
+            action_network = self.target_network_1 if ind == 0 else self.target_network_2
+
         estimated_action_values = policy_network(states).gather(1, actions).squeeze()
 
         with torch.no_grad():
-            if self.policy_train:
-                estimated_next_actions = policy_network(non_final_next_states).argmax(dim=1).view(-1, 1)
-            else:
-                estimated_next_actions = target_network_1(non_final_next_states).argmax(dim=1).view(-1, 1)
+            estimated_next_actions = action_network(non_final_next_states).argmax(dim=1).view(-1, 1)
+            estimated_next_values = target_network(non_final_next_states)
 
-            estimated_next_values = target_network_2(non_final_next_states)
             estimated_next_action_values = estimated_next_values.gather(1, estimated_next_actions).squeeze()
 
         bellman_action_values = rewards.clone()
@@ -30,8 +33,8 @@ class DoubleQLearningAgent(AbstractDoubleQLearningAgent):
 
         return self.criterion(estimated_action_values, bellman_action_values)
 
-    def step(self, experiences):
-        super().step(experiences)
+    def _step(self, experiences):
+        super()._step(experiences)
         self.target_network_1.update(self.policy_network_1)
         self.target_network_2.update(self.policy_network_2)
 
@@ -50,14 +53,15 @@ class ModifiedDoubleQLearningAgent(AbstractQLearningAgent):
         with torch.no_grad():
             estimated_next_actions = policy_network(non_final_next_states).argmax(dim=1).view(-1, 1)
             estimated_next_values = target_network(non_final_next_states)
+
             estimated_next_action_values[non_final_mask] = estimated_next_values.gather(1, estimated_next_actions).squeeze()
 
         bellman_action_values = rewards + self.discount * estimated_next_action_values
 
         return self.criterion(estimated_action_values, bellman_action_values)
 
-    def step(self, experiences):
-        super().step(experiences)
+    def _step(self, experiences):
+        super()._step(experiences)
         self.target_network.update(self.policy_network)
 
 class ClippedDoubleQLearning(AbstractDoubleQLearningAgent):
@@ -71,12 +75,14 @@ class ClippedDoubleQLearning(AbstractDoubleQLearningAgent):
         self.policy_network_2 = policy_network_2
         self.target_network_2 = SoftUpdateModel(policy_network_2, tau=tau)
 
-    def _compute_loss(self, policy_network, target_network_1, target_network_2, states, actions, rewards, non_final_next_states, non_final_mask):
+    def _compute_loss(self, ind, states, actions, rewards, non_final_next_states, non_final_mask):
+        policy_network = self.policy_network_1 if ind == 0 else self.policy_network_2
         estimated_action_values = policy_network(states).gather(1, actions).squeeze()
+
         return self.criterion(estimated_action_values, self.bellman_action_values)
 
-    def step(self, experiences):
-        _, actions, rewards, non_final_next_states, non_final_mask = batch_transitions(experiences)
+    def _step(self, experiences):
+        _, actions, rewards, non_final_next_states, non_final_mask = experiences
 
         with torch.no_grad():
             estimated_next_values_1, _ = self.target_network_1(non_final_next_states).max(dim=1)
@@ -85,7 +91,7 @@ class ClippedDoubleQLearning(AbstractDoubleQLearningAgent):
         self.bellman_action_values = rewards.clone()
         self.bellman_action_values[non_final_mask] += estimated_next_action_values
 
-        super().step(experiences)
+        super()._step(experiences)
         self.target_network_1.update(self.policy_network_1)
         self.target_network_2.update(self.policy_network_2)
         self.bellman_action_values = None

@@ -4,11 +4,10 @@ from core.agents.abstract_agent import AbstractAgent
 
 class AbstractQLearningAgent(AbstractAgent):
     def __init__(self, discount=0.99, max_grad=100):
-        super().__init__()
+        super().__init__(max_grad=max_grad)
         self.policy_network = None
         self.target_network = None
         self.discount = discount
-        self.max_grad = max_grad
 
     def sample(self, state):
         policy_action, env_action = self.policy_network.action(state)
@@ -20,20 +19,23 @@ class AbstractQLearningAgent(AbstractAgent):
     def _compute_loss(self, policy_network, target_network, experiences):
         raise NotImplementedError
 
+    def _step(self, batch_experiences):
+        loss = self._compute_loss(self.policy_network, self.target_network, batch_experiences)
+        super()._step(loss)
+
     def step(self, experiences):
         experiences = batch_transitions(experiences)
-        loss = self._compute_loss(self.policy_network, self.target_network, experiences)
-        super()._step(loss)
+        self._step(experiences)
+
 
 class AbstractDoubleQLearningAgent(AbstractAgent):
     def __init__(self, discount=0.99, max_grad=100):
-        super().__init__()
+        super().__init__(max_grad=max_grad)
         self.policy_network_1 = None
         self.policy_network_2 = None
         self.target_network_1 = None
         self.target_network_2 = None
         self.discount = discount
-        self.max_grad = max_grad
 
     def sample(self, state):
         if self.training:
@@ -56,24 +58,25 @@ class AbstractDoubleQLearningAgent(AbstractAgent):
     def parameters(self):
         return *self.policy_network_1.parameters(), *self.policy_network_2.parameters()
 
-    def _compute_loss(self, policy_network, target_network_1, target_network_2, states, actions, rewards, non_final_next_states, non_final_mask):
+    def _compute_loss(self, ind, states, actions, rewards, non_final_next_states, non_final_mask):
         raise NotImplementedError
 
-    def step(self, experiences):
-        experiences = batch_transitions(experiences)
-
-        loss_1 = self._compute_loss(self.policy_network_1, self.target_network_1, self.target_network_2, *experiences)
-        loss_2 = self._compute_loss(self.policy_network_2, self.target_network_2, self.target_network_1, *experiences)
+    def _step(self, experiences):
+        loss_1 = self._compute_loss(0, *experiences)
+        loss_2 = self._compute_loss(1, *experiences)
 
         super()._step(loss_1 + loss_2)
 
+    def step(self, experiences):
+        batch_experiences = batch_transitions(experiences)
+        self._step(batch_experiences)
+
 class AbstractMultiQlearningAgent(AbstractAgent):
     def __init__(self, discount=0.99, max_grad=100):
-        super().__init__()
+        super().__init__(max_grad=max_grad)
         self.policy_networks = None
         self.target_networks = None
         self.discount = discount
-        self.max_grad = max_grad
 
     def sample(self, state):
         if self.training:
@@ -94,11 +97,13 @@ class AbstractMultiQlearningAgent(AbstractAgent):
     def _compute_loss(self, ind, states, actions, rewards, non_final_next_states, non_final_mask):
         raise NotImplementedError
 
-    def step(self, experiences):
-        experiences = batch_transitions(experiences)
-
+    def _step(self, experiences):
         loss = torch.tensor([0.0])
         for ind, policy_network in enumerate(self.policy_networks):
             loss += self._compute_loss(ind, *experiences)
 
         super()._step(loss)
+
+    def step(self, experiences):
+        batch_experiences = batch_transitions(experiences)
+        self._step(batch_experiences)
