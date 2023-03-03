@@ -40,14 +40,14 @@ def main():
     # q = QLearningAgent(net_1, discount=gamma, tau=tau)
     # q = DoubleQLearningAgent(net_1, net_2, discount=gamma, tau=tau, policy_train=False)
     # q = ModifiedDoubleQLearningAgent(net_1, discount=gamma, tau=tau)
-    # q = ClippedDoubleQLearning(net_1, net_2, discount=gamma, tau=tau)
-    q = MultiQLearningAgent(net_1, net_2, net_3, net_4, discount=gamma, tau=tau, policy_train=False)
+    q = ClippedDoubleQLearning(net_1, net_2, discount=gamma, tau=tau)
+    # q = MultiQLearningAgent(net_1, net_2, net_3, net_4, discount=gamma, tau=tau, policy_train=False)
     q.set_criterion(nn.SmoothL1Loss())
     q.set_optimizer(optim.AdamW(q.parameters(), lr=lr, amsgrad=True))
 
     sq = AnnealAgent(q, r, start_steps=start_steps, eps_start=eps_start, eps_end=eps_end, decay_steps=eps_decay)
 
-    environment.train(sq, num_episodes, batch_size, eval_episodes=1, plot=True)
+    environment.train(sq, num_episodes, batch_size, train_steps=1, eval_episodes=1, plot=True)
 
     env.close()
 

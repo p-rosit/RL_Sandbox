@@ -6,7 +6,7 @@ class QLearningEnvironment:
         self.env = env
         self.buffer = buffer
 
-    def train(self, agent, num_episodes, batch_size, eval_episodes=0, plot=False):
+    def train(self, agent, num_episodes, batch_size, train_steps=1, eval_episodes=0, plot=False):
         episode_reward = []
         evaluation_episode = []
         evaluation_reward = []
@@ -41,7 +41,8 @@ class QLearningEnvironment:
                 state = next_state
 
                 if len(self.buffer) > batch_size:
-                    agent.step(self.buffer.sample(batch_size))
+                    for _ in range(train_steps):
+                        agent.step(self.buffer.sample(batch_size))
 
             episode_reward.append(curr_reward)
 
