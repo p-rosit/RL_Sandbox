@@ -5,7 +5,7 @@ import gymnasium as gym
 from buffer.online_buffer import OnlineEpisodeBuffer
 from environment.policy_gradient_environment import PolicyGradientEnvironment
 
-from networks.DensePolicyNetwork import DensePolicyNetwork
+from networks.dense_networks import DensePolicyNetwork
 from agents.on_policy.policy_gradient.reinforce import ReinforceAgent
 
 def main():

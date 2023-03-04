@@ -36,7 +36,10 @@ class MultiQLearningAgent(AbstractMultiQlearningAgent):
         bellman_action_values = rewards.clone()
         bellman_action_values[non_final_mask] += self.discount * estimated_next_action_values
 
-        return self.criterion(estimated_action_values, bellman_action_values)
+        extrinsic_loss = self.criterion(estimated_action_values, bellman_action_values)
+        intrinsic_loss = self.policy_networks[ind].intrinsic_loss(states, actions, rewards, non_final_next_states, non_final_mask)
+
+        return extrinsic_loss + intrinsic_loss
 
     def _step(self, experiences):
         _, _, _, non_final_next_states, _ = experiences

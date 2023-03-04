@@ -5,7 +5,7 @@ import gymnasium as gym
 from buffer.experience_replay_buffer import ReplayBuffer
 from environment.q_learning_environment import QLearningEnvironment
 
-from networks.DenseQNetwork import DenseQNetwork
+from networks.dense_networks import DenseQNetwork
 
 from agents.random_agent import RandomAgent
 from agents.off_policy.deep_q_learning.q_learning import QLearningAgent

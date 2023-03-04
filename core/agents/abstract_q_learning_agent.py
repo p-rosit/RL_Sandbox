@@ -15,11 +15,11 @@ class AbstractQLearningAgent(AbstractAgent):
     def parameters(self):
         return self.policy_network.parameters()
 
-    def _compute_loss(self, policy_network, target_network, experiences):
+    def _compute_loss(self, policy_network, target_network, states, actions, rewards, non_final_next_states, non_final_mask):
         raise NotImplementedError
 
     def _step(self, batch_experiences):
-        loss = self._compute_loss(self.policy_network, self.target_network, batch_experiences)
+        loss = self._compute_loss(self.policy_network, self.target_network, *batch_experiences)
         super()._step(loss)
 
     def step(self, experiences):

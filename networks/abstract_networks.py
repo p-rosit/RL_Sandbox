@@ -1,8 +1,12 @@
+import torch
 import torch.nn as nn
 
 class AbstractNetwork(nn.Module):
     def __init__(self):
         super().__init__()
+
+    def intrinsic_loss(self, *arg, **kwargs):
+        return torch.tensor([0.0])
 
     def action(self, state):
         raise NotImplementedError
