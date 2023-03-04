@@ -5,7 +5,7 @@ import gymnasium as gym
 from buffer.experience_replay_buffer import ReplayBuffer
 from environment.q_learning_environment import QLearningEnvironment
 
-from networks.DenseNetwork import DenseNetwork
+from networks.DenseQNetwork import DenseQNetwork
 
 from agents.random_agent import RandomAgent
 from agents.off_policy.deep_q_learning.q_learning import QLearningAgent
@@ -32,10 +32,10 @@ def main():
 
     r = RandomAgent(env)
 
-    net_1 = DenseNetwork(4, [128, 128], 2)
-    net_2 = DenseNetwork(4, [128, 128], 2)
-    net_3 = DenseNetwork(4, [128, 128], 2)
-    net_4 = DenseNetwork(4, [128, 128], 2)
+    net_1 = DenseQNetwork(4, [128, 128], 2)
+    net_2 = DenseQNetwork(4, [128, 128], 2)
+    net_3 = DenseQNetwork(4, [128, 128], 2)
+    net_4 = DenseQNetwork(4, [128, 128], 2)
 
     # q = QLearningAgent(net_1, discount=gamma, tau=tau)
     # q = DoubleQLearningAgent(net_1, net_2, discount=gamma, tau=tau, policy_train=False)

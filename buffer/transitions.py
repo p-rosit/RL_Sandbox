@@ -20,4 +20,9 @@ def batch_transitions(experiences):
 ActionTransition = namedtuple('ActionTransition', ('action', 'reward'))
 
 def batch_action_transition(experiences):
-    raise NotImplementedError
+    batch_experiences = ActionTransition(*zip(*experiences))
+
+    actions = torch.cat(batch_experiences.action, dim=0)
+    rewards = torch.cat(batch_experiences.reward, dim=0)
+
+    return actions, rewards

@@ -1,18 +1,8 @@
-from torch import nn
-from networks.AbstractNetwork import AbstractNetwork
+from networks.AbstractNetwork import AbstractDenseNetwork
 
-class DenseNetwork(AbstractNetwork):
+class DenseQNetwork(AbstractDenseNetwork):
     def __init__(self, input_size, hidden_sizes, output_size):
-        super().__init__()
-        layer_sizes = (input_size, *hidden_sizes, output_size)
-
-        layers = []
-        for size_in, size_out in zip(layer_sizes[:-1], layer_sizes[1:]):
-            layers.append(nn.Linear(size_in, size_out))
-            layers.append(nn.ReLU())
-        layers.pop()
-
-        self.network = nn.Sequential(*layers)
+        super().__init__(input_size, hidden_sizes, output_size)
 
     def forward(self, x):
         return self.network(x)
