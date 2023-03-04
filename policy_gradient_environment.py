@@ -1,3 +1,4 @@
+import torch
 from torch import nn
 from torch import optim
 import gymnasium as gym
@@ -17,12 +18,17 @@ def main():
 
     gamma = 0.99
     lr = 1e-4
-    num_episodes = 600
+    num_episodes = 5000
 
     net = DensePolicyNetwork(4, [128, 128], 2)
-    pn = ReinforceAgent(net, discount=gamma)
 
-    environment.train(pn, num_episodes, episodes_per_step=1, train_steps=1, eval_episodes=1, plot=True)
+    torch.set_printoptions(edgeitems=100000, linewidth=1000000)
+
+    pn = ReinforceAgent(net, discount=gamma)
+    pn.set_optimizer(optim.AdamW(pn.parameters(), lr=lr, amsgrad=True))
+    # pn.set_optimizer(optim.SGD(pn.parameters(), lr=lr))
+
+    environment.train(pn, num_episodes, episodes_per_step=32, train_steps=1, eval_episodes=1, plot=True)
 
     env.close()
 

@@ -6,50 +6,46 @@ class PolicyGradientEnvironment:
         self.env = env
         self.buffer = buffer
 
-    def train(self, agent, num_episodes, episodes_per_step=1, train_steps=1, eval_episodes=0, plot=False):
+    def train(self, agent, num_rollouts, episodes_per_step=1, train_steps=1, eval_episodes=0, plot=False):
         episode_reward = []
         evaluation_episode = []
         evaluation_reward = []
         fig = plt.figure(1) if plot else None
         ax = fig.subplots() if fig is not None else None
 
-        episodes_since_train = 0
-
-        for ep in range(num_episodes):
-            if ep % 10 == 0 and eval_episodes > 0:
+        for roll in range(num_rollouts):
+            if roll % 10 == 0 and eval_episodes > 0:
                 agent.eval()
-                evaluation_episode.append(ep)
+                evaluation_episode.append(roll)
                 evaluation_reward.append(self.eval(agent, eval_episodes))
                 agent.train()
 
-            episodes_since_train += 1
-            done = False
             curr_reward = 0
-            state, info = self.env.reset()
-            state = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
+            for _ in range(episodes_per_step):
+                done = False
+                state, info = self.env.reset()
+                state = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
 
-            while not done:
-                policy_action, env_action = agent.sample(state)
-                observation, reward, terminated, truncated, _ = self.env.step(env_action)
-                curr_reward += reward
-                reward = torch.tensor([reward])
-                done = terminated or truncated
+                while not done:
+                    log_prob, env_action = agent.sample(state)
+                    observation, reward, terminated, truncated, _ = self.env.step(env_action)
+                    curr_reward += reward
+                    reward = torch.tensor([reward])
+                    done = terminated or truncated
 
-                if terminated:
-                    next_state = None
-                else:
-                    next_state = torch.tensor(observation, dtype=torch.float32).unsqueeze(0)
+                    if terminated:
+                        next_state = None
+                    else:
+                        next_state = torch.tensor(observation, dtype=torch.float32).unsqueeze(0)
 
-                self.buffer.append(policy_action, reward)
-                state = next_state
+                    self.buffer.append(log_prob, reward, episode_terminated=done)
+                    state = next_state
 
-            if episodes_per_step <= episodes_since_train:
-                episodes_since_train = 0
-                for _ in range(train_steps):
-                    agent.step(self.buffer.sample())
+            for _ in range(train_steps):
+                agent.step(self.buffer.sample())
                 self.buffer.clear()
 
-            episode_reward.append(curr_reward)
+            episode_reward.append(curr_reward / episodes_per_step)
 
             if plot:
                 ax.cla()

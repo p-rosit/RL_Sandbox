@@ -18,9 +18,9 @@ class AbstractPolicyGradientAgent(AbstractAgent):
         raise NotImplementedError
 
     def _step(self, batch_experiences):
-        loss = self._compute_loss(self.policy_network, batch_experiences)
+        loss = self._compute_loss(self.policy_network, *batch_experiences)
         super()._step(loss)
 
     def step(self, experiences):
         batch_experiences = batch_action_transition(experiences)
-        self._step(experiences)
+        self._step(batch_experiences)
