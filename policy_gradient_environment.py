@@ -8,6 +8,7 @@ from environment.policy_gradient_environment import PolicyGradientEnvironment
 
 from networks.dense_networks import DensePolicyNetwork
 from agents.on_policy.policy_gradient.reinforce import ReinforceAgent, ModifiedReinforceAgent
+from agents.on_policy.policy_gradient.policy_gradient_baseline import ReinforceAdvantageAgent, ModifiedReinforceAdvantageAgent
 
 def main():
     # env = gym.make("LunarLander-v2", render_mode="human")
@@ -23,7 +24,9 @@ def main():
     net = DensePolicyNetwork(4, [128, 128], 2)
 
     # pn = ReinforceAgent(net, discount=gamma)
-    pn = ModifiedReinforceAgent(net, truncate_grad_trajectory=10, discount=gamma)
+    # pn = ModifiedReinforceAgent(net, truncate_grad_trajectory=30, discount=gamma)
+    # pn = ReinforceAdvantageAgent(net, discount=gamma)
+    pn = ModifiedReinforceAdvantageAgent(net, truncate_grad_trajectory=600, discount=gamma)
     pn.set_optimizer(optim.AdamW(pn.parameters(), lr=lr, amsgrad=True))
     # pn.set_optimizer(optim.SGD(pn.parameters(), lr=lr))
 
