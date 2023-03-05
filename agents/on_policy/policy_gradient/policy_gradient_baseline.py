@@ -1,5 +1,5 @@
 import torch
-from  core.agents.abstract_policy_gradient_agent import AbstractPolicyGradientAgent
+from core.agents.abstract_policy_gradient_agent import AbstractPolicyGradientAgent
 
 class ReinforceAdvantageAgent(AbstractPolicyGradientAgent):
     def __init__(self, network, discount=0.99, max_grad=torch.inf):
