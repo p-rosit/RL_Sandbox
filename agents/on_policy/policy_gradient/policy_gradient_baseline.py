@@ -14,16 +14,16 @@ class ReinforceAdvantageAgent(AbstractPolicyGradientAgent):
         trajectory_amount = torch.zeros(max_trajectory, 1)
         trajectory_rewards = []
 
-        all_discount_pows = self.discount * torch.ones(max_trajectory)
-        all_discount_pows = all_discount_pows.pow(torch.arange(max_trajectory))
+        discount_pows = self.discount * torch.ones(max_trajectory)
+        discount_pows = discount_pows.pow(torch.arange(max_trajectory))
+        all_step_discounts = torch.cat((discount_pows, torch.zeros(1)))
+        all_step_discounts = torch.triu(all_step_discounts.repeat(max_trajectory).view(-1, max_trajectory)[:-1])
 
         for episode_rewards in rewards:
             size = episode_rewards.size(0)
 
-            discount_pows = all_discount_pows[:size]
-
-            step_discounts = torch.cat((discount_pows, torch.zeros(1)))
-            step_discounts = torch.triu(step_discounts.repeat(size).view(-1, size)[:-1])
+            step_discounts = all_step_discounts[:, :size]
+            step_discounts = step_discounts[:size]
 
             episode_trajectory_rewards = torch.mm(step_discounts, episode_rewards.view(-1, 1))
             trajectory_rewards.append(episode_trajectory_rewards)
@@ -60,16 +60,16 @@ class ModifiedReinforceAdvantageAgent(AbstractPolicyGradientAgent):
         trajectory_amount = torch.zeros(max_trajectory, 1)
         trajectory_rewards = []
 
-        all_discount_pows = self.discount * torch.ones(max_trajectory)
-        all_discount_pows = all_discount_pows.pow(torch.arange(max_trajectory))
+        discount_pows = self.discount * torch.ones(max_trajectory)
+        discount_pows = discount_pows.pow(torch.arange(max_trajectory))
+        all_step_discounts = torch.cat((discount_pows, torch.zeros(1)))
+        all_step_discounts = torch.triu(all_step_discounts.repeat(max_trajectory).view(-1, max_trajectory)[:-1])
 
         for episode_rewards in rewards:
             size = episode_rewards.size(0)
 
-            discount_pows = all_discount_pows[:size]
-
-            step_discounts = torch.cat((discount_pows, torch.zeros(1)))
-            step_discounts = torch.triu(step_discounts.repeat(size).view(-1, size)[:-1])
+            step_discounts = all_step_discounts[:, :size]
+            step_discounts = step_discounts[:size]
 
             episode_trajectory_rewards = torch.mm(step_discounts, episode_rewards.view(-1, 1))
             trajectory_rewards.append(episode_trajectory_rewards)
@@ -82,12 +82,16 @@ class ModifiedReinforceAdvantageAgent(AbstractPolicyGradientAgent):
         for episode_log_probs, episode_trajectory_rewards in zip(log_probs, trajectory_rewards):
             size = episode_log_probs.size(0)
 
-            discount_pows = all_discount_pows[:size].view(-1, 1)
+            size_grad_trajectory = min(size, self.truncate_grad_trajectory)
+            step_discounts = all_step_discounts[:, :size]
+            step_discounts = step_discounts[:size_grad_trajectory]
+
             policy_function = (episode_trajectory_rewards - value_estimate[:size]) * episode_log_probs
 
-            for k in range(min(size, self.truncate_grad_trajectory)):
-                extrinsic_loss[k] -= (policy_function[k:] * discount_pows[:size-k]).sum()
-                samples_of_grad[k] += 1
+            extrinsic_loss[:size_grad_trajectory] -= (
+                (torch.mm(step_discounts, policy_function))
+            ).sum()
+            samples_of_grad[:size_grad_trajectory] += 1
 
         extrinsic_loss = (extrinsic_loss / samples_of_grad).sum()
         intrinsic_loss = policy_network.intrinsic_loss(log_probs, rewards)
