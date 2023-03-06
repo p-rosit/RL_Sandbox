@@ -17,16 +17,20 @@ def batch_transitions(experiences):
 
     return states, actions, rewards, non_final_next_states, non_final_mask
 
-ActionTransition = namedtuple('ActionTransition', ('action', 'reward'))
+ActionTransition = namedtuple('ActionTransition', ('state', 'log_prob', 'action', 'reward'))
 
 def batch_action_transition(experiences):
+    states = []
+    log_probs = []
     actions = []
     rewards = []
 
     for episode in experiences:
         batch_experiences = ActionTransition(*zip(*episode))
 
+        states.append(torch.cat(batch_experiences.state, dim=0))
+        log_probs.append(torch.cat(batch_experiences.log_prob, dim=0))
         actions.append(torch.cat(batch_experiences.action, dim=0))
         rewards.append(torch.cat(batch_experiences.reward, dim=0))
 
-    return actions, rewards
+    return states, log_probs, actions, rewards

@@ -10,8 +10,8 @@ class OnlineEpisodeBuffer(AbstractBuffer):
     def __len__(self):
         return sum(len(episode) for episode in self.buffer)
 
-    def append(self, action, reward, episode_terminated=False):
-        self.episode.append(ActionTransition(action, reward))
+    def append(self, state, log_prob, action, reward, episode_terminated=False):
+        self.episode.append(ActionTransition(state, log_prob, action, reward))
         if episode_terminated:
             self.buffer.append(self.episode)
             self.episode = []
@@ -25,9 +25,9 @@ class OnlineEpisodeBuffer(AbstractBuffer):
 if __name__ == '__main__':
     b = OnlineEpisodeBuffer()
 
-    b.append([1, 2], 2)
-    b.append([2, 3], 3)
-    b.append([3, 4], 4)
+    b.append([1, 2], -10, 1, 2)
+    b.append([2, 3], -2, 0, 3)
+    b.append([3, 4], -7, 0, 4)
 
     print(b.buffer)
     print(b.sample())

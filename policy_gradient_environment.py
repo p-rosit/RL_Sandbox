@@ -19,18 +19,17 @@ def main():
 
     gamma = 0.99
     lr = 1e-4
-    num_episodes = 5000
+    num_rollouts = 5000
 
     net = DensePolicyNetwork(4, [128, 128], 2)
 
     # pn = ReinforceAgent(net, discount=gamma)
-    # pn = ModifiedReinforceAgent(net, truncate_grad_trajectory=30, discount=gamma)
-    pn = ReinforceAdvantageAgent(net, discount=gamma)
-    # pn = ModifiedReinforceAdvantageAgent(net, truncate_grad_trajectory=600, discount=gamma)
+    # pn = ModifiedReinforceAgent(net, truncate_grad_trajectory=600, discount=gamma)
+    # pn = ReinforceAdvantageAgent(net, discount=gamma)
+    pn = ModifiedReinforceAdvantageAgent(net, truncate_grad_trajectory=600, discount=gamma)
     pn.set_optimizer(optim.AdamW(pn.parameters(), lr=lr, amsgrad=True))
-    # pn.set_optimizer(optim.SGD(pn.parameters(), lr=lr))
 
-    environment.train(pn, num_episodes, episodes_per_step=16, eval_episodes=10, plot=True)
+    environment.train(pn, num_rollouts, episodes_per_step=16, eval_episodes=10, plot=True)
 
     env.close()
 

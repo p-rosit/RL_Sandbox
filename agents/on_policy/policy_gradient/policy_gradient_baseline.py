@@ -6,7 +6,7 @@ class ReinforceAdvantageAgent(AbstractPolicyGradientAgent):
         super().__init__(discount=discount, max_grad=max_grad)
         self.policy_network = network
 
-    def _compute_loss(self, policy_network, log_probs, rewards):
+    def _compute_loss(self, policy_network, states, log_probs, actions, rewards):
         extrinsic_loss = torch.zeros(1)
 
         max_trajectory = max(reward.size(0) for reward in rewards)
@@ -40,7 +40,7 @@ class ReinforceAdvantageAgent(AbstractPolicyGradientAgent):
             extrinsic_loss -= policy_function.sum()
 
         extrinsic_loss /= len(log_probs)
-        intrinsic_loss = policy_network.intrinsic_loss(log_probs, rewards)
+        intrinsic_loss = policy_network.intrinsic_loss(states, log_probs, actions, rewards)
 
         return extrinsic_loss + intrinsic_loss
 
@@ -50,7 +50,7 @@ class ModifiedReinforceAdvantageAgent(AbstractPolicyGradientAgent):
         self.policy_network = network
         self.truncate_grad_trajectory = truncate_grad_trajectory
 
-    def _compute_loss(self, policy_network, log_probs, rewards):
+    def _compute_loss(self, policy_network, states, log_probs, actions, rewards):
         max_trajectory = max(reward.size(0) for reward in rewards)
         total_grads = min(max_trajectory, self.truncate_grad_trajectory)
         extrinsic_loss = torch.zeros(total_grads)
@@ -94,6 +94,6 @@ class ModifiedReinforceAdvantageAgent(AbstractPolicyGradientAgent):
             samples_of_grad[:size_grad_trajectory] += 1
 
         extrinsic_loss = (extrinsic_loss / samples_of_grad).sum()
-        intrinsic_loss = policy_network.intrinsic_loss(log_probs, rewards)
+        intrinsic_loss = policy_network.intrinsic_loss(states, log_probs, actions, rewards)
 
         return extrinsic_loss + intrinsic_loss
