@@ -43,9 +43,9 @@ def main():
 
     r = RandomAgent(env)
 
-    alpha_start = 10
-    alpha_end = 0.001
-    alpha_decay = 500
+    alpha_start = 10  # 100
+    alpha_end = 0.1  # 1
+    alpha_decay = 1000
     net_1 = DenseEgoMotionQNetwork(input_size, hidden_sizes, output_size, alpha_start=alpha_start, alpha_end=alpha_end, alpha_decay=alpha_decay)
     net_2 = DenseEgoMotionQNetwork(input_size, hidden_sizes, output_size, alpha_start=alpha_start, alpha_end=alpha_end, alpha_decay=alpha_decay)
     net_3 = DenseEgoMotionQNetwork(input_size, hidden_sizes, output_size, alpha_start=alpha_start, alpha_end=alpha_end, alpha_decay=alpha_decay)
@@ -67,12 +67,12 @@ def main():
 
     # pn = ReinforceAgent(net, discount=gamma)
     # pn = ModifiedReinforceAgent(net, truncate_grad_trajectory=600, discount=gamma)
-    # pn = ReinforceAdvantageAgent(net, discount=gamma)
-    pn = ModifiedReinforceAdvantageAgent(net, truncate_grad_trajectory=600, discount=gamma)
+    pn = ReinforceAdvantageAgent(net, discount=gamma)
+    # pn = ModifiedReinforceAdvantageAgent(net, truncate_grad_trajectory=600, discount=gamma)
     pn.set_optimizer(optim.AdamW(pn.parameters(), lr=lr, amsgrad=True))
 
     # q_environment.train(sq, num_episodes, batch_size, train_steps=1, eval_episodes=1, plot=True)
-    p_environment.train(pn, num_rollouts, episodes_per_step=16, eval_episodes=10, plot=True)
+    p_environment.train(pn, num_rollouts, train_steps=1, episodes_per_step=16, eval_episodes=10, plot=True)
 
     env.close()
 
