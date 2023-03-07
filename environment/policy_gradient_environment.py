@@ -6,7 +6,7 @@ class PolicyGradientEnvironment:
         self.env = env
         self.buffer = buffer
 
-    def train(self, agent, num_rollouts, episodes_per_step=1, eval_episodes=0, plot=False):
+    def train(self, agent, num_rollouts, train_steps=1, episodes_per_step=1, eval_episodes=0, plot=False):
         episode_reward = []
         evaluation_episode = []
         evaluation_reward = []
@@ -41,7 +41,8 @@ class PolicyGradientEnvironment:
                     self.buffer.append(state, policy_action, reward, episode_terminated=done)
                     state = next_state
 
-            agent.step(self.buffer.sample())
+            for _ in range(train_steps):
+                agent.step(self.buffer.sample())
             self.buffer.clear()
 
             episode_reward.append(curr_reward / episodes_per_step)

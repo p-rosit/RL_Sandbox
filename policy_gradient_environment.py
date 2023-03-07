@@ -29,7 +29,7 @@ def main():
     pn = ModifiedReinforceAdvantageAgent(net, truncate_grad_trajectory=600, discount=gamma)
     pn.set_optimizer(optim.AdamW(pn.parameters(), lr=lr, amsgrad=True))
 
-    environment.train(pn, num_rollouts, episodes_per_step=16, eval_episodes=10, plot=True)
+    environment.train(pn, num_rollouts, train_steps=3, episodes_per_step=16, eval_episodes=10, plot=True)
 
     env.close()
 
