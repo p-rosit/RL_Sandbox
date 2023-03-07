@@ -15,8 +15,8 @@ from core.wrapper.agent_wrappers import AnnealAgent
 
 def main():
     # env = gym.make("LunarLander-v2", render_mode="human")
-    # env = gym.make("LunarLander-v2")
-    env = gym.make("CartPole-v1")
+    env = gym.make("LunarLander-v2")
+    # env = gym.make("CartPole-v1")
     buffer = ReplayBuffer(max_size=50000)
     environment = QLearningEnvironment(env, buffer)
 
@@ -40,8 +40,8 @@ def main():
     # q = QLearningAgent(net_1, discount=gamma, tau=tau)
     # q = DoubleQLearningAgent(net_1, net_2, discount=gamma, tau=tau, policy_train=False)
     # q = ModifiedDoubleQLearningAgent(net_1, discount=gamma, tau=tau)
-    # q = ClippedDoubleQLearning(net_1, net_2, discount=gamma, tau=tau)
-    q = MultiQLearningAgent(net_1, net_2, net_3, net_4, discount=gamma, tau=tau, policy_train=False)
+    q = ClippedDoubleQLearning(net_1, net_2, discount=gamma, tau=tau)
+    # q = MultiQLearningAgent(net_1, net_2, net_3, net_4, discount=gamma, tau=tau, policy_train=False)
     q.set_criterion(nn.SmoothL1Loss())
     q.set_optimizer(optim.AdamW(q.parameters(), lr=lr, amsgrad=True))
 
