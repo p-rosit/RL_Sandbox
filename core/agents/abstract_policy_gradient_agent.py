@@ -1,6 +1,7 @@
+import torch
+from torch.distributions import Categorical
 from buffer.transitions import batch_action_transition
 from core.agents.abstract_agent import AbstractAgent
-
 
 class AbstractPolicyGradientAgent(AbstractAgent):
     def __init__(self, discount=0.99, max_grad=100):
@@ -23,4 +24,17 @@ class AbstractPolicyGradientAgent(AbstractAgent):
 
     def step(self, experiences):
         batch_experiences = batch_action_transition(experiences)
-        self._step(batch_experiences)
+        states, actions, rewards = batch_experiences
+
+        log_probs = []
+        for episode_states, episode_actions in zip(states, actions):
+            logits = self.policy_network(episode_states)
+            episode_log_probs = torch.zeros(logits.size(0), 1)
+
+            for i, action in enumerate(episode_actions):
+                dist = Categorical(logits=logits[i])
+                episode_log_probs[i] = dist.log_prob(action)
+
+            log_probs.append(episode_log_probs)
+
+        self._step((states, log_probs, actions, rewards))

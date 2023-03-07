@@ -27,7 +27,7 @@ class PolicyGradientEnvironment:
                 state = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
 
                 while not done:
-                    log_prob, env_action = agent.sample(state)
+                    policy_action, env_action = agent.sample(state)
                     observation, reward, terminated, truncated, _ = self.env.step(env_action)
                     curr_reward += reward
                     reward = torch.tensor([reward])
@@ -38,7 +38,7 @@ class PolicyGradientEnvironment:
                     else:
                         next_state = torch.tensor(observation, dtype=torch.float32).unsqueeze(0)
 
-                    self.buffer.append(state, log_prob, torch.tensor([env_action]), reward, episode_terminated=done)
+                    self.buffer.append(state, policy_action, reward, episode_terminated=done)
                     state = next_state
 
             agent.step(self.buffer.sample())

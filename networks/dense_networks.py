@@ -55,20 +55,17 @@ class DenseEgoMotionQNetwork(AbstractDenseEgoMotionNetwork):
         return action_value, policy_action, env_action
 
 class DensePolicyNetwork(AbstractDenseNetwork):
-    def __init__(self, input_size, hidden_sizes, output_size):
-        super().__init__(input_size, hidden_sizes, output_size)
-        self.prob_layer = nn.Softmax(dim=1)
 
     def forward(self, x):
-        return self.prob_layer(self.network(x))
+        return self.network(x)
 
     def action(self, state):
-        dist = Categorical(self.forward(state))
+        logits = self.forward(state)
+        dist = Categorical(logits=logits)
 
-        env_action = dist.sample()
-        log_prob = dist.log_prob(env_action)
+        action = dist.sample()
 
-        return log_prob, env_action.item()
+        return action.view(-1, 1), action.item()
 
     def action_value(self, state):
         raise RuntimeError('Policy network does not estimate value.')
@@ -76,16 +73,11 @@ class DensePolicyNetwork(AbstractDenseNetwork):
 class DenseEgoMotionPolicyNetwork(AbstractDenseEgoMotionNetwork):
     def __init__(self, input_size, hidden_sizes, output_size, alpha_start=100, alpha_end=0.01, alpha_decay=1000):
         super().__init__(input_size, hidden_sizes, output_size)
-        self.prob_layer = nn.Softmax(dim=1)
-
         self.curr_step = 0
         self.alpha_start = alpha_start
         self.alpha_end = alpha_end
         self.alpha_decay = alpha_decay
         self.loss_function = nn.CrossEntropyLoss()
-
-    def forward(self, x):
-        return self.prob_layer(super().forward(x))
 
     def intrinsic_loss(self, states, log_probs, actions, rewards):
         intrinsic_loss = torch.zeros(1)
@@ -107,12 +99,12 @@ class DenseEgoMotionPolicyNetwork(AbstractDenseEgoMotionNetwork):
         return alpha * intrinsic_loss
 
     def action(self, state):
-        dist = Categorical(self.forward(state))
+        logits = self.forward(state)
+        dist = Categorical(logits=logits)
 
-        env_action = dist.sample()
-        log_prob = dist.log_prob(env_action)
+        action = dist.sample()
 
-        return log_prob, env_action.item()
+        return action.view(-1, 1), action.item()
 
     def action_value(self, state):
         raise RuntimeError('Policy network does not estimate value.')
