@@ -36,11 +36,15 @@ class AbstractDenseEgoMotionNetwork(AbstractNetwork):
         layer_sizes = (input_size, *hidden_sizes)
 
         layers = []
+        layers_future = []
         for size_in, size_out in zip(layer_sizes[:-1], layer_sizes[1:]):
             layers.append(nn.Linear(size_in, size_out))
             layers.append(nn.ReLU())
+            layers_future.append(nn.Linear(size_in, size_out))
+            layers_future.append(nn.ReLU())
 
         self.initial_network = nn.Sequential(*layers)
+        self.future_network = nn.Sequential(*layers_future)
         self.action_layer = nn.Linear(hidden_sizes[-1], output_size)
         self.action_classification_layer = nn.Linear(2 * hidden_sizes[-1], output_size)
         self.softmax = nn.Softmax(dim=1)

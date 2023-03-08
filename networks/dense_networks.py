@@ -31,7 +31,7 @@ class DenseEgoMotionQNetwork(AbstractDenseEgoMotionNetwork):
 
     def intrinsic_loss(self, states, actions, rewards, non_final_next_states, non_final_mask):
         intermediate_1 = self.initial_network(states[non_final_mask])
-        intermediate_2 = self.initial_network(non_final_next_states)
+        intermediate_2 = self.future_network(non_final_next_states)
 
         intermediate = torch.cat((intermediate_1, intermediate_2), dim=1)
         logits = self.action_classification_layer(intermediate)
@@ -81,7 +81,7 @@ class DenseEgoMotionPolicyNetwork(AbstractDenseEgoMotionNetwork):
 
     def _intrinsic_loss(self, states, actions, next_states):
         intermediate_1 = self.initial_network(states)
-        intermediate_2 = self.initial_network(next_states)
+        intermediate_2 = self.future_network(next_states)
 
         intermediate = torch.cat((intermediate_1, intermediate_2), dim=1)
         logits = self.action_classification_layer(intermediate)

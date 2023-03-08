@@ -23,8 +23,8 @@ from agents.on_policy.policy_gradient.policy_gradient_baseline import ReinforceA
 
 def freeze(network):
     params = list(network.parameters())
-    for param in params[:-1]:
-        param.requires_grad = False
+    # for param in params[:-1]:
+    #     param.requires_grad = False
 
 def main():
     # env = gym.make("LunarLander-v2", render_mode="human")
@@ -38,9 +38,9 @@ def main():
     pre_train = True
     pre_eps = 1000
     epochs = 3000
-    b_size = 256
-    q_nets = 0
-    p_nets = 1
+    b_size = 1024
+    q_nets = 2
+    p_nets = 0
 
     input_size = 4
     hidden_sizes = [128, 128]
@@ -62,9 +62,9 @@ def main():
     if pre_train:
         q_environment.train(r, pre_eps, batch_size, train_steps=1, eval_episodes=1)
 
-    alpha_start = 10  # 100
-    alpha_end = 0.1  # 1
-    alpha_decay = 1000
+    alpha_start = 1  # 100
+    alpha_end = 0.0000001  # 1
+    alpha_decay = 2
     net_1 = DenseEgoMotionQNetwork(input_size, hidden_sizes, output_size, alpha_start=alpha_start, alpha_end=alpha_end, alpha_decay=alpha_decay)
     net_2 = DenseEgoMotionQNetwork(input_size, hidden_sizes, output_size, alpha_start=alpha_start, alpha_end=alpha_end, alpha_decay=alpha_decay)
     net_3 = DenseEgoMotionQNetwork(input_size, hidden_sizes, output_size, alpha_start=alpha_start, alpha_end=alpha_end, alpha_decay=alpha_decay)
@@ -147,8 +147,8 @@ def main():
     net_4.curr_step = 0
     net.curr_step = 0
 
-    # q_environment.train(sq, num_episodes, batch_size, train_steps=1, eval_episodes=1, plot=True)
-    p_environment.train(pn, num_rollouts, train_steps=1, episodes_per_step=16, eval_episodes=10, plot=True)
+    q_environment.train(sq, num_episodes, batch_size, train_steps=1, eval_episodes=1, plot=True)
+    # p_environment.train(pn, num_rollouts, train_steps=1, episodes_per_step=16, eval_episodes=10, plot=True)
 
     env.close()
 
