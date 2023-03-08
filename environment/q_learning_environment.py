@@ -10,7 +10,7 @@ class QLearningEnvironment:
         episode_reward = []
         evaluation_episode = []
         evaluation_reward = []
-        fig = plt.figure(1) if plot else None
+        fig = plt.figure() if plot else None
         ax = fig.subplots() if fig is not None else None
 
         for ep in range(num_episodes):

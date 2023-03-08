@@ -8,6 +8,16 @@ class AbstractQLearningAgent(AbstractAgent):
         self.policy_network = None
         self.target_network = None
 
+    def train(self):
+        self.policy_network.train()
+        self.target_network.train()
+        super().train()
+
+    def eval(self):
+        self.policy_network.eval()
+        self.target_network.eval()
+        super().eval()
+
     def sample(self, state):
         policy_action, env_action = self.policy_network.action(state)
         return policy_action.view(-1, 1), env_action
@@ -34,6 +44,20 @@ class AbstractDoubleQLearningAgent(AbstractAgent):
         self.policy_network_2 = None
         self.target_network_1 = None
         self.target_network_2 = None
+
+    def train(self):
+        self.policy_network_1.train()
+        self.policy_network_2.train()
+        self.target_network_1.train()
+        self.target_network_2.train()
+        super().train()
+
+    def eval(self):
+        self.policy_network_1.eval()
+        self.policy_network_2.eval()
+        self.target_network_1.eval()
+        self.target_network_2.eval()
+        super().eval()
 
     def sample(self, state):
         if self.training:
@@ -74,6 +98,20 @@ class AbstractMultiQlearningAgent(AbstractAgent):
         super().__init__(discount=discount, max_grad=max_grad)
         self.policy_networks = None
         self.target_networks = None
+
+    def train(self):
+        for policy_network, target_network in zip(self.policy_networks, self.target_networks):
+            policy_network.train()
+            target_network.train()
+
+        super().train()
+
+    def eval(self):
+        for policy_network, target_network in zip(self.policy_networks, self.target_networks):
+            policy_network.eval()
+            target_network.eval()
+
+        super().eval()
 
     def sample(self, state):
         if self.training:

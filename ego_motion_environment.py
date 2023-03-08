@@ -132,7 +132,7 @@ def main():
             q_optimizer.step()
             p_optimizer.step()
 
-        plt.plot([l / b_size for l in losss])
+        plt.plot(losss)
         plt.show()
 
     freeze(net_1.initial_network)
