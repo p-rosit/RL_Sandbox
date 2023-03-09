@@ -45,19 +45,17 @@ def main():
     # net_3 = DenseQNetwork(input_size, hidden_sizes, output_size)
     # net_4 = DenseQNetwork(input_size, hidden_sizes, output_size)
 
-    alpha_start = 0
-    alpha_end = 0
-    alpha_decay = 1
-    net_1 = DenseEgoMotionQNetwork(input_size, hidden_sizes, output_size, alpha_start=alpha_start, alpha_end=alpha_end, alpha_decay=alpha_decay)
-    net_2 = DenseEgoMotionQNetwork(input_size, hidden_sizes, output_size, alpha_start=alpha_start, alpha_end=alpha_end, alpha_decay=alpha_decay)
-    net_3 = DenseEgoMotionQNetwork(input_size, hidden_sizes, output_size, alpha_start=alpha_start, alpha_end=alpha_end, alpha_decay=alpha_decay)
-    net_4 = DenseEgoMotionQNetwork(input_size, hidden_sizes, output_size, alpha_start=alpha_start, alpha_end=alpha_end, alpha_decay=alpha_decay)
+    alpha_start = 10
+    net_1 = DenseEgoMotionQNetwork(input_size, hidden_sizes, output_size, alpha_start=alpha_start)
+    net_2 = DenseEgoMotionQNetwork(input_size, hidden_sizes, output_size, alpha_start=alpha_start)
+    net_3 = DenseEgoMotionQNetwork(input_size, hidden_sizes, output_size, alpha_start=alpha_start)
+    net_4 = DenseEgoMotionQNetwork(input_size, hidden_sizes, output_size, alpha_start=alpha_start)
 
-    q = QLearningAgent(net_1, discount=gamma, tau=tau)
+    # q = QLearningAgent(net_1, discount=gamma, tau=tau)
     # q = DoubleQLearningAgent(net_1, net_2, discount=gamma, tau=tau, policy_train=False)
     # q = ModifiedDoubleQLearningAgent(net_1, discount=gamma, tau=tau)
     # q = ClippedDoubleQLearning(net_1, net_2, discount=gamma, tau=tau)
-    # q = MultiQLearningAgent(net_1, net_2, net_3, net_4, discount=gamma, tau=tau, policy_train=False)
+    q = MultiQLearningAgent(net_1, net_2, net_3, net_4, discount=gamma, tau=tau, policy_train=False)
     q.set_criterion(nn.SmoothL1Loss())
     q.set_optimizer(optim.AdamW(q.parameters(), lr=lr, amsgrad=True))
 

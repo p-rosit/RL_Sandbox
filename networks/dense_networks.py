@@ -21,7 +21,7 @@ class DenseQNetwork(AbstractDenseNetwork):
         return action_value, policy_action, env_action
 
 class DenseEgoMotionQNetwork(AbstractDenseEgoMotionNetwork):
-    def __init__(self, input_size, hidden_sizes, output_size, alpha_start=100, alpha_end=0.01, alpha_decay=1000):
+    def __init__(self, input_size, hidden_sizes, output_size, alpha_start=1, alpha_end=0, alpha_decay=1000):
         super().__init__(input_size, hidden_sizes, output_size)
         self.curr_step = 0
         self.alpha_start = alpha_start

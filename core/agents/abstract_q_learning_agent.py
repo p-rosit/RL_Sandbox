@@ -25,6 +25,9 @@ class AbstractQLearningAgent(AbstractAgent):
     def parameters(self):
         return self.policy_network.parameters()
 
+    def _pretrain_loss(self, states, actions, rewards, non_final_next_states, non_final_mask):
+        return self.policy_network.pretrain_loss(states, actions, rewards, non_final_next_states, non_final_mask)
+
     def pretrain_loss(self, experiences):
         batch_experiences = batch_transitions(experiences)
         return self._pretrain_loss(*batch_experiences)
@@ -84,6 +87,11 @@ class AbstractDoubleQLearningAgent(AbstractAgent):
     def parameters(self):
         return *self.policy_network_1.parameters(), *self.policy_network_2.parameters()
 
+    def _pretrain_loss(self, states, actions, rewards, non_final_next_states, non_final_mask):
+        loss_1 = self.policy_network_1.pretrain_loss(states, actions, rewards, non_final_next_states, non_final_mask)
+        loss_2 = self.policy_network_2.pretrain_loss(states, actions, rewards, non_final_next_states, non_final_mask)
+        return loss_1 + loss_2
+
     def pretrain_loss(self, experiences):
         batch_experiences = batch_transitions(experiences)
         return self._pretrain_loss(*batch_experiences)
@@ -136,6 +144,12 @@ class AbstractMultiQlearningAgent(AbstractAgent):
         for policy_network in self.policy_networks:
             for param in policy_network.parameters():
                 yield param
+
+    def _pretrain_loss(self, states, actions, rewards, non_final_next_states, non_final_mask):
+        loss = torch.zeros(1)
+        for policy_network in self.policy_networks:
+            loss += policy_network.pretrain_loss(states, actions, rewards, non_final_next_states, non_final_mask)
+        return loss
 
     def pretrain_loss(self, experiences):
         batch_experiences = batch_transitions(experiences)
