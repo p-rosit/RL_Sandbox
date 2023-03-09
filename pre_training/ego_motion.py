@@ -12,7 +12,7 @@ def pre_train_state_dynamics(net, optimizer, buffer, epochs, batch_size, plot=Fa
         states = states[non_final_mask]
         actions = actions[non_final_mask]
 
-        loss = net.pre_loss(states, actions, next_states)
+        loss = net.pretrain_loss(states, actions, next_states)
         loss_history.append(loss.item())
 
         optimizer.zero_grad()

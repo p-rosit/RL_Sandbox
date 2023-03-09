@@ -8,6 +8,9 @@ class QLearningAgent(AbstractQLearningAgent):
         self.policy_network = policy_network
         self.target_network = SoftUpdateModel(policy_network, tau=tau)
 
+    def _pretrain_loss(self, states, actions, rewards, non_final_next_states, non_final_mask):
+        return self.policy_network.pretrain_loss(states, actions, rewards, non_final_next_states, non_final_mask)
+
     def _compute_loss(self, policy_network, target_network, states, actions, rewards, non_final_next_states, non_final_mask):
         estimated_action_values = policy_network(states).gather(1, actions).squeeze()
 

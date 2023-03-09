@@ -26,6 +26,12 @@ class AbstractAgent:
     def parameters(self):
         raise NotImplementedError
 
+    def _pretrain_loss(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def pretrain_loss(self, *args, **kwargs):
+        raise NotImplementedError
+
     def _compute_loss(self, *args, **kwargs):
         raise NotImplementedError
 
@@ -37,6 +43,12 @@ class AbstractAgent:
 
     def step(self, experiences):
         raise NotImplementedError
+
+    def optimizer_zero_grad(self):
+        self.optimizer.zero_grad()
+
+    def optimizer_step(self):
+        self.optimizer.step()
 
 class AbstractOptimizerFreeAgent(AbstractAgent):
     def set_optimizer(self, _):

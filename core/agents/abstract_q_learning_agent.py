@@ -25,6 +25,10 @@ class AbstractQLearningAgent(AbstractAgent):
     def parameters(self):
         return self.policy_network.parameters()
 
+    def pretrain_loss(self, experiences):
+        batch_experiences = batch_transitions(experiences)
+        return self._pretrain_loss(*batch_experiences)
+
     def _compute_loss(self, policy_network, target_network, states, actions, rewards, non_final_next_states, non_final_mask):
         raise NotImplementedError
 
@@ -80,6 +84,10 @@ class AbstractDoubleQLearningAgent(AbstractAgent):
     def parameters(self):
         return *self.policy_network_1.parameters(), *self.policy_network_2.parameters()
 
+    def pretrain_loss(self, experiences):
+        batch_experiences = batch_transitions(experiences)
+        return self._pretrain_loss(*batch_experiences)
+
     def _compute_loss(self, ind, states, actions, rewards, non_final_next_states, non_final_mask):
         raise NotImplementedError
 
@@ -128,6 +136,10 @@ class AbstractMultiQlearningAgent(AbstractAgent):
         for policy_network in self.policy_networks:
             for param in policy_network.parameters():
                 yield param
+
+    def pretrain_loss(self, experiences):
+        batch_experiences = batch_transitions(experiences)
+        return self._pretrain_loss(*batch_experiences)
 
     def _compute_loss(self, ind, states, actions, rewards, non_final_next_states, non_final_mask):
         raise NotImplementedError

@@ -6,6 +6,42 @@ class QLearningEnvironment:
         self.env = env
         self.buffer = buffer
 
+    def explore(self, agent, num_episodes):
+        for _ in range(num_episodes):
+            done = False
+            state, info = self.env.reset()
+            state = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
+
+            while not done:
+                policy_action, env_action = agent.sample(state)
+                observation, reward, terminated, truncated, _ = self.env.step(env_action)
+                reward = torch.tensor([reward])
+                done = terminated or truncated
+
+                if terminated:
+                    next_state = None
+                else:
+                    next_state = torch.tensor(observation, dtype=torch.float32).unsqueeze(0)
+
+                self.buffer.append(state, policy_action, reward, next_state)
+                state = next_state
+
+    def pretrain(self, agent, epochs, batch_size, plot=False):
+        history = []
+
+        for _ in range(epochs):
+            loss = agent.pretrain_loss(self.buffer.sample(batch_size))
+
+            history.append(loss.item())
+
+            agent.optimizer_zero_grad()
+            loss.backward()
+            agent.optimizer_step()
+
+        if plot:
+            plt.plot(history)
+            plt.show()
+
     def train(self, agent, num_episodes, batch_size, train_steps=1, eval_episodes=0, plot=False):
         episode_reward = []
         evaluation_episode = []

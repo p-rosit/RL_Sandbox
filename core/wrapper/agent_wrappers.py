@@ -20,11 +20,20 @@ class Discrete2Continuous(AbstractAgent):
     def parameters(self):
         return self.agent.parameters()
 
+    def pretrain_loss(self, *args, **kwargs):
+        return self.agent.pretrain_loss(*args, **kwargs)
+
     def step(self, continuous_experiences):
         discrete_experiences = []
         for state, continuous_action, reward, next_state in continuous_experiences:
             discrete_experiences.append((state, self.reverse_map[continuous_action], reward, next_state))
         self.agent.step(discrete_experiences)
+
+    def optimizer_zero_grad(self):
+        self.agent.optimizer_zero_grad()
+
+    def optimizer_step(self):
+        self.agent.optimizer_step()
 
 class MultiAgent(AbstractOptimizerFreeAgent):
     def __init__(self, *agents: AbstractAgent, p: list = None):
@@ -41,9 +50,18 @@ class MultiAgent(AbstractOptimizerFreeAgent):
         ind = torch.randint(len(self.agents))
         return self.agents[ind].sample(state)
 
+    def pretrain_loss(self, *args, **kwargs):
+        return sum(agent.pretrain_loss(*args, **kwargs) for agent in self.agents)
+
     def step(self, *args):
         for agent in self.agents:
             agent.step(*args)
+
+    def optimizer_zero_grad(self):
+        [agent.optimizer_zero_grad() for agent in self.agents]
+
+    def optimizer_step(self):
+        [agent.optimizer_step() for agent in self.agents]
 
 class AnnealAgent(AbstractAgent):
     def __init__(self, agent, replacement_agent, start_steps=1000, eps_start=0.9, eps_end=0.05, decay_steps=1000):
@@ -82,5 +100,14 @@ class AnnealAgent(AbstractAgent):
     def parameters(self):
         return self.agent.parameters()
 
-    def step(self, *args):
-        self.agent.step(*args)
+    def pretrain_loss(self, *args, **kwargs):
+        return self.agent.pretrain_loss(*args, **kwargs)
+
+    def step(self, *args, **kwargs):
+        self.agent.step(*args, **kwargs)
+
+    def optimizer_zero_grad(self):
+        self.agent.optimizer_zero_grad()
+
+    def optimizer_step(self):
+        self.agent.optimizer_step()

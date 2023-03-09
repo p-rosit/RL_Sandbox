@@ -29,7 +29,7 @@ class DenseEgoMotionQNetwork(AbstractDenseEgoMotionNetwork):
         self.alpha_decay = alpha_decay
         self.loss_function = nn.CrossEntropyLoss()
 
-    def intrinsic_loss(self, states, actions, rewards, non_final_next_states, non_final_mask):
+    def pretrain_loss(self, states, actions, rewards, non_final_next_states, non_final_mask):
         intermediate_1 = self.initial_network(states[non_final_mask])
         intermediate_2 = self.future_network(non_final_next_states)
 
@@ -37,12 +37,16 @@ class DenseEgoMotionQNetwork(AbstractDenseEgoMotionNetwork):
         logits = self.action_classification_layer(intermediate)
         classification = self.softmax(logits)
 
-        intrinsic_loss = self.loss_function(classification, actions[non_final_mask].reshape(-1))
+        ego_loss = self.loss_function(classification, actions[non_final_mask].reshape(-1))
 
+        return ego_loss
+
+    def intrinsic_loss(self, states, actions, rewards, non_final_next_states, non_final_mask):
         t = torch.exp(torch.tensor(-1. * self.curr_step / self.alpha_decay, dtype=torch.float64))
         alpha = self.alpha_end + (self.alpha_start - self.alpha_end) * t
         self.curr_step += 1
-        return alpha * intrinsic_loss
+
+        return alpha * self.pretrain_loss(states, actions, rewards, non_final_next_states, non_final_mask)
 
     def action(self, state):
         policy_action = self.forward(state).argmax(dim=1)
@@ -78,6 +82,9 @@ class DenseEgoMotionPolicyNetwork(AbstractDenseEgoMotionNetwork):
         self.alpha_end = alpha_end
         self.alpha_decay = alpha_decay
         self.loss_function = nn.CrossEntropyLoss()
+
+    def pretrain_loss(self, states, log_probs, actions, rewards):
+        raise NotImplementedError
 
     def intrinsic_loss(self, states, log_probs, actions, rewards, next_state=None):
         intrinsic_loss = torch.zeros(1)
