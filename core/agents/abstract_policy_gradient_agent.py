@@ -8,6 +8,14 @@ class AbstractPolicyGradientAgent(AbstractAgent):
         super().__init__(discount=discount, max_grad=max_grad)
         self.policy_network = None
 
+    def train(self):
+        self.policy_network.train()
+        super().train()
+    
+    def eval(self):
+        self.policy_network.eval()
+        super().eval()
+
     def sample(self, state):
         policy_action, env_action = self.policy_network.action(state)
         return policy_action.view(-1, 1), env_action
@@ -15,7 +23,14 @@ class AbstractPolicyGradientAgent(AbstractAgent):
     def parameters(self):
         return self.policy_network.parameters()
 
-    def _compute_loss(self, *args, **kwargs):
+    def _pretrain_loss(self, states, actions, rewards):
+        return self.policy_network.pretrain_loss(states, actions, rewards)
+
+    def pretrain_loss(self, experiences):
+        batch_experiences = batch_action_transition(experiences)
+        return self._pretrain_loss(*batch_experiences)
+
+    def _compute_loss(self, policy_network, states, log_probs, actions, rewards):
         raise NotImplementedError
 
     def _step(self, batch_experiences):

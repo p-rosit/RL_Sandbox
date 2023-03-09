@@ -83,11 +83,8 @@ class DenseEgoMotionPolicyNetwork(AbstractDenseEgoMotionNetwork):
         self.alpha_decay = alpha_decay
         self.loss_function = nn.CrossEntropyLoss()
 
-    def pretrain_loss(self, states, log_probs, actions, rewards):
-        raise NotImplementedError
-
-    def intrinsic_loss(self, states, log_probs, actions, rewards, next_state=None):
-        intrinsic_loss = torch.zeros(1)
+    def pretrain_loss(self, states, actions, rewards):
+        pre_loss = torch.zeros(1)
 
         for episode_states, episode_actions in zip(states, actions):
             intermediate_1 = self.initial_network(episode_states[:-1])
@@ -97,13 +94,16 @@ class DenseEgoMotionPolicyNetwork(AbstractDenseEgoMotionNetwork):
             logits = self.action_classification_layer(intermediate)
             classification = self.softmax(logits)
 
-            intrinsic_loss += self.loss_function(classification, episode_actions[:-1].reshape(-1))
+            pre_loss += self.loss_function(classification, episode_actions[:-1].reshape(-1))
 
+        return pre_loss
+
+    def intrinsic_loss(self, states, log_probs, actions, rewards):
         t = torch.exp(torch.tensor(-1. * self.curr_step / self.alpha_decay, dtype=torch.float64))
         alpha = self.alpha_end + (self.alpha_start - self.alpha_end) * t
         self.curr_step += 1
 
-        return alpha * intrinsic_loss
+        return alpha * self.pretrain_loss(states, actions, rewards)
 
     def action(self, state):
         logits = self.forward(state)
