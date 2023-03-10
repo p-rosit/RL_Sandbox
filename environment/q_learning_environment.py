@@ -43,7 +43,7 @@ class QLearningEnvironment:
             plt.plot(history)
             plt.show()
 
-    def train(self, agent, num_episodes, batch_size, train_steps=1, eval_episodes=0, plot=False):
+    def train(self, agent, num_episodes, batch_size, train_steps=1, eval_episodes=0, td_steps=1, plot=False):
         episode_reward = []
         evaluation_episode = []
         evaluation_reward = []
@@ -80,14 +80,16 @@ class QLearningEnvironment:
 
                 if len(self.buffer) > batch_size:
                     for _ in range(train_steps):
-                        agent.step(self.buffer.sample(batch_size=batch_size, trajectory_length=3))
+                        # agent.step(self.buffer.sample(batch_size=batch_size))
+                        agent.step(self.buffer.sample(batch_size=batch_size, trajectory_length=td_steps))
 
             episode_reward.append(curr_reward)
 
             if plot:
                 ax.cla()
                 ax.plot(episode_reward)
-                ax.plot(evaluation_episode, evaluation_reward)
+                if eval_episodes > 0:
+                    ax.plot(evaluation_episode, evaluation_reward)
                 plt.draw()
                 plt.pause(0.0001)
 

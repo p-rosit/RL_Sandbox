@@ -3,7 +3,7 @@ from torch import nn
 from torch import optim
 import gymnasium as gym
 
-from buffer.online_buffer import OnlineEpisodeBuffer
+from buffer.experience_replay_buffer import ModReplayBuffer
 from environment.policy_gradient_environment import PolicyGradientEnvironment
 
 from networks.dense_networks import DensePolicyNetwork, DenseEgoMotionPolicyNetwork
@@ -15,7 +15,7 @@ def main():
     # env = gym.make("LunarLander-v2", render_mode="human")
     # env = gym.make("LunarLander-v2")
     env = gym.make("CartPole-v1")
-    buffer = OnlineEpisodeBuffer()
+    buffer = ModReplayBuffer(max_size=torch.inf)
     environment = PolicyGradientEnvironment(env, buffer)
 
     input_size = 4
@@ -41,8 +41,9 @@ def main():
     # pn = ModifiedReinforceAdvantageAgent(net, truncate_grad_trajectory=600, discount=gamma)
     pn.set_optimizer(optim.AdamW(pn.parameters(), lr=lr, amsgrad=True))
 
-    environment.explore(RandomAgent(env), initial_episodes)
-    environment.pretrain(pn, epochs, plot=True)
+    # environment.explore(RandomAgent(env), initial_episodes)
+    # environment.pretrain(pn, epochs, plot=True)
+    # environment.buffer.clear()
     environment.train(pn, num_rollouts, train_steps=1, episodes_per_step=16, eval_episodes=10, plot=True)
 
     env.close()

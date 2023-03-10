@@ -78,7 +78,7 @@ class PolicyGradientEnvironment:
                     state = next_state
 
             for _ in range(train_steps):
-                agent.step(self.buffer.sample())
+                agent.step(self.buffer.all_episodes())
             self.buffer.clear()
 
             episode_reward.append(curr_reward / episodes_per_step)

@@ -25,9 +25,9 @@ class OnlineEpisodeBuffer(AbstractBuffer):
 if __name__ == '__main__':
     b = OnlineEpisodeBuffer()
 
-    b.append([1, 2], -10, 1, 2)
-    b.append([2, 3], -2, 0, 3)
-    b.append([3, 4], -7, 0, 4)
+    b.append([1, 2], -10, 1)
+    b.append([2, 3], -2, 0)
+    b.append([3, 4], -7, 0)
 
     print(b.buffer)
     print(b.sample())

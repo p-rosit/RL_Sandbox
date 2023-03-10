@@ -25,7 +25,7 @@ def main():
     hidden_sizes = [128, 128]
     output_size = 2
 
-    batch_size = 25
+    batch_size = 256
     gamma = 0.99
     eps_start = 0.9
     eps_end = 0.05
@@ -62,10 +62,10 @@ def main():
 
     sq = AnnealAgent(q, r, start_steps=start_steps, eps_start=eps_start, eps_end=eps_end, decay_steps=eps_decay)
 
-    # environment.explore(r, initial_episodes)
-    # environment.pretrain(sq, epochs, pre_batch, plot=True)
-    # environment.buffer.clear()
-    environment.train(sq, num_episodes, batch_size, train_steps=1, eval_episodes=1, plot=True)
+    environment.explore(r, initial_episodes)
+    environment.pretrain(sq, epochs, pre_batch, plot=True)
+    environment.buffer.clear()
+    environment.train(sq, num_episodes, batch_size, train_steps=1, eval_episodes=1, td_steps=5, plot=True)
 
     env.close()
 

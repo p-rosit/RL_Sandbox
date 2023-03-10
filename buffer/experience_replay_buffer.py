@@ -45,7 +45,7 @@ class ModReplayBuffer(AbstractBuffer):
         return sum(len(episode) for episode in self.buffer)
 
     def normalize(self):
-        episode_sum = [sum(episode) for episode in self.buffer]
+        episode_sum = [sum(episode) for episode in self.weights]
         total_sum = sum(episode_sum)
 
         episode_weights = [weight / total_sum for weight in episode_sum]
@@ -68,12 +68,12 @@ class ModReplayBuffer(AbstractBuffer):
     def sample(self, batch_size=1, trajectory_length=1):
         episode_weights, normalized_weights = self.normalize()
 
-        self.episode_inds = rng.choice(len(self.buffer), batch_size)
+        self.episode_inds = rng.choice(len(self.buffer), batch_size, p=episode_weights)
         self.inds = []
 
         trajectories = []
         for episode_ind in self.episode_inds:
-            ind = rng.choice(len(self.buffer[episode_ind]))
+            ind = rng.choice(len(self.buffer[episode_ind]), p=normalized_weights[episode_ind])
             self.inds.append(ind)
 
             experiences = self.buffer[episode_ind][ind:ind+trajectory_length]
