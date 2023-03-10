@@ -34,12 +34,23 @@ class ModReplayBuffer(AbstractBuffer):
         super().__init__(max_size=max_size)
         self.ind = 0
         self.buffer = []
-        self.episode = []
+        self.weights = []
+
         self.episode_inds = []
         self.inds = []
 
+        self.episode = []
+
     def __len__(self):
         return sum(len(episode) for episode in self.buffer)
+
+    def normalize(self):
+        episode_sum = [sum(episode) for episode in self.buffer]
+        total_sum = sum(episode_sum)
+
+        episode_weights = [weight / total_sum for weight in episode_sum]
+        normalized_weights = [[weight / ep_sum for weight in episode] for ep_sum, episode in zip(episode_sum, self.weights)]
+        return episode_weights, normalized_weights
 
     def append(self, state, action, reward, episode_terminated=False):
         experience = ActionTransition(state, action, reward)
@@ -47,11 +58,16 @@ class ModReplayBuffer(AbstractBuffer):
 
         if episode_terminated:
             self.buffer.append(self.episode)
+            self.weights.append([1 for _ in self.episode])
+
             self.episode = []
             while len(self) > self.max_size and len(self.buffer) > 1:
                 self.buffer.pop(0)
+                self.weights.pop(0)
 
     def sample(self, batch_size=1, trajectory_length=1):
+        episode_weights, normalized_weights = self.normalize()
+
         self.episode_inds = rng.choice(len(self.buffer), batch_size)
         self.inds = []
 
