@@ -1,5 +1,5 @@
 import numpy as np
-from buffer.transitions import Transition
+from buffer.transitions import Transition, ActionTransition
 from buffer.abstract_buffer import AbstractBuffer
 
 rng = np.random.default_rng()
@@ -28,6 +28,59 @@ class ReplayBuffer(AbstractBuffer):
 
     def clear(self):
         self.buffer = []
+
+class ModReplayBuffer(AbstractBuffer):
+    def __init__(self, max_size=100):
+        super().__init__(max_size=max_size)
+        self.ind = 0
+        self.buffer = []
+        self.episode = []
+        self.episode_inds = []
+        self.inds = []
+
+    def __len__(self):
+        return sum(len(episode) for episode in self.buffer)
+
+    def append(self, state, action, reward, episode_terminated=False):
+        experience = ActionTransition(state, action, reward)
+        self.episode.append(experience)
+
+        if episode_terminated:
+            self.buffer.append(self.episode)
+            self.episode = []
+            while len(self) > self.max_size and len(self.buffer) > 1:
+                self.buffer.pop(0)
+
+    def sample(self, batch_size=1, trajectory_length=1):
+        self.episode_inds = rng.choice(len(self.buffer), batch_size)
+        self.inds = []
+
+        trajectories = []
+        for episode_ind in self.episode_inds:
+            ind = rng.choice(len(self.buffer[episode_ind]))
+            self.inds.append(ind)
+
+            experiences = self.buffer[episode_ind][ind:ind+trajectory_length]
+            states, actions, rewards = zip(*experiences)
+
+            if len(self.buffer[episode_ind]) > ind + trajectory_length:
+                states = (*states, self.buffer[episode_ind][ind + trajectory_length].state)
+            else:
+                states = (*states, None)
+
+            trajectories.append(ActionTransition(states, actions, rewards))
+
+        return trajectories
+
+    def update(self, sample_error):
+        pass
+
+    def all_episodes(self):
+        return self.buffer
+
+    def clear(self):
+        self.buffer = []
+        self.episode = []
 
 if __name__ == '__main__':
     b = ReplayBuffer(max_size=2)
