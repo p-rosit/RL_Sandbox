@@ -5,31 +5,6 @@ from buffer.abstract_buffer import AbstractBuffer
 rng = np.random.default_rng()
 
 class ReplayBuffer(AbstractBuffer):
-    def __init__(self, max_size=1000):
-        super().__init__(max_size=max_size)
-        self.ind = 0
-        self.buffer = []
-
-    def __len__(self):
-        return len(self.buffer)
-
-    def append(self, state, action, reward, next_state):
-        experience = Transition(state, action, reward, next_state)
-
-        if len(self.buffer) < self.max_size:
-            self.buffer.append(experience)
-        else:
-            self.buffer[self.ind] = experience
-
-        self.ind = (self.ind + 1) % self.max_size
-
-    def sample(self, batch_size=1):
-        return [self.buffer[ind] for ind in rng.choice(len(self.buffer), batch_size)]
-
-    def clear(self):
-        self.buffer = []
-
-class ModReplayBuffer(AbstractBuffer):
     def __init__(self, max_size=100):
         super().__init__(max_size=max_size)
         self.ind = 0
@@ -58,7 +33,7 @@ class ModReplayBuffer(AbstractBuffer):
 
         if episode_terminated:
             self.buffer.append(self.episode)
-            self.weights.append([1 for _ in self.episode])
+            self.weights.append([1 for _ in range(len(self.episode)-1)])
 
             self.episode = []
             while len(self) > self.max_size and len(self.buffer) > 1:
@@ -73,16 +48,12 @@ class ModReplayBuffer(AbstractBuffer):
 
         trajectories = []
         for episode_ind in self.episode_inds:
-            ind = rng.choice(len(self.buffer[episode_ind]), p=normalized_weights[episode_ind])
+            ind = rng.choice(len(self.buffer[episode_ind])-1, p=normalized_weights[episode_ind])
             self.inds.append(ind)
 
-            experiences = self.buffer[episode_ind][ind:ind+trajectory_length]
+            experiences = self.buffer[episode_ind][ind:min(len(self.buffer[episode_ind]) - 1, ind+trajectory_length)]
             states, actions, rewards = zip(*experiences)
-
-            if len(self.buffer[episode_ind]) > ind + trajectory_length:
-                states = (*states, self.buffer[episode_ind][ind + trajectory_length].state)
-            else:
-                states = (*states, None)
+            states = (*states, self.buffer[episode_ind][min(len(self.buffer[episode_ind]) - 1, ind+trajectory_length)].state)
 
             trajectories.append(ActionTransition(states, actions, rewards))
 

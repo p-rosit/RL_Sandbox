@@ -23,8 +23,7 @@ class QLearningEnvironment:
                 else:
                     next_state = torch.tensor(observation, dtype=torch.float32).unsqueeze(0)
 
-                self.buffer.append(state, policy_action, reward, next_state)
-                # self.buffer.append(state, policy_action, reward, episode_terminated=done)
+                self.buffer.append(state, policy_action, reward, episode_terminated=done)
                 state = next_state
 
     def pretrain(self, agent, optimizer, epochs, batch_size, plot=False):
@@ -74,19 +73,17 @@ class QLearningEnvironment:
                 else:
                     next_state = torch.tensor(observation, dtype=torch.float32).unsqueeze(0)
 
-                self.buffer.append(state, policy_action, reward, next_state)
-                # self.buffer.append(state, policy_action, reward, episode_terminated=done)
+                self.buffer.append(state, policy_action, reward, episode_terminated=done)
                 state = next_state
 
                 if len(self.buffer) > batch_size:
                     for _ in range(train_steps):
-                        loss = agent.loss(self.buffer.sample(batch_size=batch_size))
+                        loss = agent.loss(self.buffer.sample(batch_size=batch_size, trajectory_length=td_steps))
                         optimizer.zero_grad()
                         loss.backward()
                         torch.nn.utils.clip_grad_value_(agent.parameters(), 100)
                         optimizer.step()
                         agent.update_target()
-                        # loss = agent.step(self.buffer.sample(batch_size=batch_size, trajectory_length=td_steps))
 
             episode_reward.append(curr_reward)
 

@@ -8,7 +8,10 @@ class QLearningAgent(AbstractQLearningAgent):
         self.policy_network = policy_network
         self.target_network = SoftUpdateModel(policy_network, tau=tau)
 
-    def _compute_loss(self, policy_network, target_network, states, actions, rewards, non_final_next_states, non_final_mask):
+    def _compute_loss(self, policy_network, target_network, states, actions, rewards, masks):
+        discount = torch.pow(self.discount, torch.arange(len(masks)))
+        print(discount)
+        error(':)')
         estimated_action_values = policy_network(states).gather(1, actions).squeeze()
 
         with torch.no_grad():
