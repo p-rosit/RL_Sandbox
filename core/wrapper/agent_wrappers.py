@@ -1,5 +1,5 @@
 import torch
-from core.agents.abstract_agent import AbstractAgent, AbstractOptimizerFreeAgent
+from core.agents.abstract_agent import AbstractAgent
 
 class Discrete2Continuous(AbstractAgent):
     def __init__(self, agent, remap):
@@ -10,12 +10,6 @@ class Discrete2Continuous(AbstractAgent):
 
     def sample(self, state):
         return self.remap[self.agent.sample(state)]
-
-    def set_optimizer(self, optimizer):
-        self.agent.set_optimizer(optimizer)
-
-    def set_criterion(self, criterion):
-        self.agent.set_criterion(criterion)
 
     def parameters(self):
         return self.agent.parameters()
@@ -29,14 +23,11 @@ class Discrete2Continuous(AbstractAgent):
             discrete_experiences.append((state, self.reverse_map[continuous_action], reward, next_state))
         self.agent.step(discrete_experiences)
 
-    def optimizer_zero_grad(self):
-        self.agent.optimizer_zero_grad()
+    def update_target(self):
+        self.agent.update_target()
 
-    def optimizer_step(self):
-        self.agent.optimizer_step()
-
-class MultiAgent(AbstractOptimizerFreeAgent):
-    def __init__(self, *agents: AbstractAgent, p: list = None):
+class MultiAgent(AbstractAgent):
+    def __init__(self, *agents, p=None):
         super().__init__()
         self.agents = agents
         if p is None:
@@ -53,15 +44,11 @@ class MultiAgent(AbstractOptimizerFreeAgent):
     def pretrain_loss(self, *args, **kwargs):
         return sum(agent.pretrain_loss(*args, **kwargs) for agent in self.agents)
 
-    def step(self, *args):
-        for agent in self.agents:
-            agent.step(*args)
+    def loss(self, *args, **kwargs):
+        return sum(agent.loss(*args, **kwargs) for agent in self.agents)
 
-    def optimizer_zero_grad(self):
-        [agent.optimizer_zero_grad() for agent in self.agents]
-
-    def optimizer_step(self):
-        [agent.optimizer_step() for agent in self.agents]
+    def update_target(self):
+        [agent.update_taret() for agent in self.agents]
 
 class AnnealAgent(AbstractAgent):
     def __init__(self, agent, replacement_agent, start_steps=1000, eps_start=0.9, eps_end=0.05, decay_steps=1000):
@@ -91,23 +78,14 @@ class AnnealAgent(AbstractAgent):
         else:
             return self.agent.sample(state)
 
-    def set_optimizer(self, optimizer):
-        self.agent.set_optimizer(optimizer)
-
-    def set_criterion(self, criterion):
-        self.agent.set_criterion(criterion)
-
     def parameters(self):
         return self.agent.parameters()
 
     def pretrain_loss(self, *args, **kwargs):
         return self.agent.pretrain_loss(*args, **kwargs)
 
-    def step(self, *args, **kwargs):
-        self.agent.step(*args, **kwargs)
+    def loss(self, *args, **kwargs):
+        return self.agent.loss(*args, **kwargs)
 
-    def optimizer_zero_grad(self):
-        self.agent.optimizer_zero_grad()
-
-    def optimizer_step(self):
-        self.agent.optimizer_step()
+    def update_target(self):
+        self.agent.update_target()

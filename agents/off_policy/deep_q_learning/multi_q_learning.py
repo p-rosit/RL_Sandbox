@@ -3,8 +3,8 @@ from core.agents.abstract_q_learning_agent import AbstractMultiQlearningAgent
 from core.wrapper.network_wrappers import SoftUpdateModel
 
 class MultiQLearningAgent(AbstractMultiQlearningAgent):
-    def __init__(self, *networks, discount=0.99, tau=0.005, max_grad=100, policy_train=False):
-        super().__init__(discount=discount, max_grad=max_grad)
+    def __init__(self, *networks, discount=0.99, tau=0.005, policy_train=False):
+        super().__init__(discount=discount)
         self.estimated_next_action_values = None
 
         self.policy_networks = []
@@ -41,9 +41,7 @@ class MultiQLearningAgent(AbstractMultiQlearningAgent):
 
         return extrinsic_loss + intrinsic_loss
 
-    def _step(self, experiences):
-        _, _, _, non_final_next_states, _ = experiences
-
+    def _loss(self, states, actions, rewards, non_final_next_states, non_final_mask):
         estimated_next_action_values = []
         with torch.no_grad():
             for target_network in self.target_networks:
@@ -51,7 +49,6 @@ class MultiQLearningAgent(AbstractMultiQlearningAgent):
                 estimated_next_action_values.append(vals)
         self.estimated_next_action_values = torch.cat(estimated_next_action_values, dim=0)
 
-        super()._step(experiences)
-
-        for policy_network, target_network in zip(self.policy_networks, self.target_networks):
-            target_network.update(policy_network)
+        loss = super()._loss(states, actions, rewards, non_final_next_states, non_final_mask)
+        self.estimated_next_action_values = None
+        return loss

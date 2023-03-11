@@ -3,8 +3,8 @@ from core.agents.abstract_q_learning_agent import AbstractQLearningAgent, Abstra
 from core.wrapper.network_wrappers import SoftUpdateModel
 
 class DoubleQLearningAgent(AbstractDoubleQLearningAgent):
-    def __init__(self, policy_network_1, policy_network_2, discount=0.99, tau=0.005, max_grad=100, policy_train=True):
-        super().__init__(discount=discount, max_grad=max_grad)
+    def __init__(self, policy_network_1, policy_network_2, discount=0.99, tau=0.005, policy_train=True):
+        super().__init__(discount=discount)
         self.policy_train = policy_train
         self.policy_network_1 = policy_network_1
         self.target_network_1 = SoftUpdateModel(policy_network_1, tau=tau)
@@ -36,14 +36,9 @@ class DoubleQLearningAgent(AbstractDoubleQLearningAgent):
 
         return extrinsic_loss + intrinsic_loss
 
-    def _step(self, experiences):
-        super()._step(experiences)
-        self.target_network_1.update(self.policy_network_1)
-        self.target_network_2.update(self.policy_network_2)
-
 class ModifiedDoubleQLearningAgent(AbstractQLearningAgent):
-    def __init__(self, policy_network, discount=0.99, tau=0.005, max_grad=100):
-        super().__init__(discount=discount, max_grad=max_grad)
+    def __init__(self, policy_network, discount=0.99, tau=0.005):
+        super().__init__(discount=discount)
         self.policy_network = policy_network
         self.target_network = SoftUpdateModel(policy_network, tau=tau)
 
@@ -64,13 +59,9 @@ class ModifiedDoubleQLearningAgent(AbstractQLearningAgent):
 
         return extrinsic_loss + intrinsic_loss
 
-    def _step(self, experiences):
-        super()._step(experiences)
-        self.target_network.update(self.policy_network)
-
 class ClippedDoubleQLearning(AbstractDoubleQLearningAgent):
-    def __init__(self, policy_network_1, policy_network_2, discount=0.99, tau=0.005, max_grad=100):
-        super().__init__(discount=discount, max_grad=max_grad)
+    def __init__(self, policy_network_1, policy_network_2, discount=0.99, tau=0.005):
+        super().__init__(discount=discount)
         self.bellman_action_values = None
 
         self.policy_network_1 = policy_network_1
@@ -88,9 +79,7 @@ class ClippedDoubleQLearning(AbstractDoubleQLearningAgent):
 
         return extrinsic_loss + intrinsic_loss
 
-    def _step(self, experiences):
-        _, actions, rewards, non_final_next_states, non_final_mask = experiences
-
+    def _loss(self, states, actions, rewards, non_final_next_states, non_final_mask):
         with torch.no_grad():
             estimated_next_values_1, _ = self.target_network_1(non_final_next_states).max(dim=1)
             estimated_next_values_2, _ = self.target_network_2(non_final_next_states).max(dim=1)
@@ -98,7 +87,6 @@ class ClippedDoubleQLearning(AbstractDoubleQLearningAgent):
         self.bellman_action_values = rewards.clone()
         self.bellman_action_values[non_final_mask] += estimated_next_action_values
 
-        super()._step(experiences)
-        self.target_network_1.update(self.policy_network_1)
-        self.target_network_2.update(self.policy_network_2)
+        loss = super()._loss(states, actions, rewards, non_final_next_states, non_final_mask)
         self.bellman_action_values = None
+        return loss

@@ -23,11 +23,11 @@ class QLearningEnvironment:
                 else:
                     next_state = torch.tensor(observation, dtype=torch.float32).unsqueeze(0)
 
-                # self.buffer.append(state, policy_action, reward, next_state)
-                self.buffer.append(state, policy_action, reward, episode_terminated=done)
+                self.buffer.append(state, policy_action, reward, next_state)
+                # self.buffer.append(state, policy_action, reward, episode_terminated=done)
                 state = next_state
 
-    def pretrain(self, agent, epochs, batch_size, plot=False):
+    def pretrain(self, agent, optimizer, epochs, batch_size, plot=False):
         history = []
 
         for _ in range(epochs):
@@ -35,15 +35,15 @@ class QLearningEnvironment:
 
             history.append(loss.item())
 
-            agent.optimizer_zero_grad()
+            optimizer.zero_grad()
             loss.backward()
-            agent.optimizer_step()
+            optimizer.step()
 
         if plot:
             plt.plot(history)
             plt.show()
 
-    def train(self, agent, num_episodes, batch_size, train_steps=1, eval_episodes=0, td_steps=1, plot=False):
+    def train(self, agent, optimizer, num_episodes, batch_size, train_steps=1, eval_episodes=0, td_steps=1, plot=False):
         episode_reward = []
         evaluation_episode = []
         evaluation_reward = []
@@ -74,14 +74,19 @@ class QLearningEnvironment:
                 else:
                     next_state = torch.tensor(observation, dtype=torch.float32).unsqueeze(0)
 
-                # self.buffer.append(state, policy_action, reward, next_state)
-                self.buffer.append(state, policy_action, reward, episode_terminated=done)
+                self.buffer.append(state, policy_action, reward, next_state)
+                # self.buffer.append(state, policy_action, reward, episode_terminated=done)
                 state = next_state
 
                 if len(self.buffer) > batch_size:
                     for _ in range(train_steps):
-                        # agent.step(self.buffer.sample(batch_size=batch_size))
-                        agent.step(self.buffer.sample(batch_size=batch_size, trajectory_length=td_steps))
+                        loss = agent.loss(self.buffer.sample(batch_size=batch_size))
+                        optimizer.zero_grad()
+                        loss.backward()
+                        torch.nn.utils.clip_grad_value_(agent.parameters(), 100)
+                        optimizer.step()
+                        agent.update_target()
+                        # loss = agent.step(self.buffer.sample(batch_size=batch_size, trajectory_length=td_steps))
 
             episode_reward.append(curr_reward)
 

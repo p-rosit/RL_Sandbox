@@ -6,7 +6,7 @@ class ReinforceAdvantageAgent(AbstractPolicyGradientAgent):
         super().__init__(discount=discount, max_grad=max_grad)
         self.policy_network = network
 
-    def _compute_loss(self, policy_network, states, log_probs, actions, rewards):
+    def _loss(self, policy_network, states, log_probs, actions, rewards):
         extrinsic_loss = torch.zeros(1)
 
         max_trajectory = max(reward.size(0) for reward in rewards)
@@ -50,7 +50,7 @@ class ModifiedReinforceAdvantageAgent(AbstractPolicyGradientAgent):
         self.policy_network = network
         self.truncate_grad_trajectory = truncate_grad_trajectory
 
-    def _compute_loss(self, policy_network, states, log_probs, actions, rewards):
+    def _loss(self, policy_network, states, log_probs, actions, rewards):
         max_trajectory = max(reward.size(0) for reward in rewards)
         total_grads = min(max_trajectory, self.truncate_grad_trajectory)
         extrinsic_loss = torch.zeros(total_grads)

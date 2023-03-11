@@ -30,11 +30,11 @@ class AbstractPolicyGradientAgent(AbstractAgent):
         batch_experiences = batch_action_transition(experiences)
         return self._pretrain_loss(*batch_experiences)
 
-    def _compute_loss(self, policy_network, states, log_probs, actions, rewards):
+    def _loss(self, policy_network, states, log_probs, actions, rewards):
         raise NotImplementedError
 
     def _step(self, batch_experiences):
-        loss = self._compute_loss(self.policy_network, *batch_experiences)
+        loss = self._loss(self.policy_network, *batch_experiences)
         super()._step(loss)
 
     def step(self, experiences):

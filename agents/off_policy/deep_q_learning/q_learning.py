@@ -3,8 +3,8 @@ from core.agents.abstract_q_learning_agent import AbstractQLearningAgent
 from core.wrapper.network_wrappers import SoftUpdateModel
 
 class QLearningAgent(AbstractQLearningAgent):
-    def __init__(self, policy_network, discount=0.99, tau=0.005, max_grad=100):
-        super().__init__(discount=discount, max_grad=max_grad)
+    def __init__(self, policy_network, discount=0.99, tau=0.005):
+        super().__init__(discount=discount)
         self.policy_network = policy_network
         self.target_network = SoftUpdateModel(policy_network, tau=tau)
 
@@ -20,7 +20,3 @@ class QLearningAgent(AbstractQLearningAgent):
         intrinsic_loss = policy_network.intrinsic_loss(states, actions, rewards, non_final_next_states, non_final_mask)
 
         return extrinsic_loss + intrinsic_loss
-
-    def _step(self, experiences):
-        super()._step(experiences)
-        self.target_network.update(self.policy_network)
