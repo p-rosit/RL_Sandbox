@@ -35,16 +35,16 @@ def main():
     alpha_start = 10
     net = DenseEgoMotionPolicyNetwork(input_size, hidden_sizes, output_size, alpha_start=alpha_start)
 
-    pn = ReinforceAgent(net, discount=gamma)
+    # pn = ReinforceAgent(net, discount=gamma)
     # pn = ModifiedReinforceAgent(net, truncate_grad_trajectory=600, discount=gamma)
     # pn = ReinforceAdvantageAgent(net, discount=gamma)
-    # pn = ModifiedReinforceAdvantageAgent(net, truncate_grad_trajectory=600, discount=gamma)
-    pn.set_optimizer(optim.AdamW(pn.parameters(), lr=lr, amsgrad=True))
+    pn = ModifiedReinforceAdvantageAgent(net, truncate_grad_trajectory=600, discount=gamma)
+    optimizer = optim.AdamW(pn.parameters(), lr=lr, amsgrad=True)
 
     # environment.explore(RandomAgent(env), initial_episodes)
-    # environment.pretrain(pn, epochs, plot=True)
+    # environment.pretrain(pn, optimizer, epochs, plot=True)
     # environment.buffer.clear()
-    environment.train(pn, num_rollouts, train_steps=1, episodes_per_step=16, eval_episodes=10, plot=True)
+    environment.train(pn, optimizer, num_rollouts, train_steps=1, episodes_per_step=16, eval_episodes=10, plot=True)
 
     env.close()
 

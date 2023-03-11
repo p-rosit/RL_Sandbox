@@ -2,11 +2,11 @@ import torch
 from core.agents.abstract_policy_gradient_agent import AbstractPolicyGradientAgent
 
 class ReinforceAgent(AbstractPolicyGradientAgent):
-    def __init__(self, network, discount=0.99, max_grad=torch.inf):
-        super().__init__(discount=discount, max_grad=max_grad)
+    def __init__(self, network, discount=0.99):
+        super().__init__(discount=discount)
         self.policy_network = network
 
-    def _loss(self, policy_network, states, log_probs, actions, rewards):
+    def _compute_loss(self, policy_network, states, log_probs, actions, rewards):
         max_trajectory = max(reward.size(0) for reward in rewards)
 
         discount_pows = self.discount * torch.ones(max_trajectory)
@@ -32,12 +32,12 @@ class ReinforceAgent(AbstractPolicyGradientAgent):
         return extrinsic_loss + intrinsic_loss
 
 class ModifiedReinforceAgent(AbstractPolicyGradientAgent):
-    def __init__(self, network, truncate_grad_trajectory=torch.inf, discount=0.99, max_grad=torch.inf):
-        super().__init__(discount=discount, max_grad=max_grad)
+    def __init__(self, network, truncate_grad_trajectory=torch.inf, discount=0.99):
+        super().__init__(discount=discount)
         self.policy_network = network
         self.truncate_grad_trajectory = truncate_grad_trajectory
 
-    def _loss(self, policy_network, states, log_probs, actions, rewards):
+    def _compute_loss(self, policy_network, states, log_probs, actions, rewards):
         max_trajectory = max(reward.size(0) for reward in rewards)
         total_grads = min(max(log_prob.size(0) for log_prob in log_probs), self.truncate_grad_trajectory)
 

@@ -26,7 +26,7 @@ class PolicyGradientEnvironment:
                 self.buffer.append(state, policy_action, reward, episode_terminated=done)
                 state = next_state
 
-    def pretrain(self, agent, epochs, plot=False):
+    def pretrain(self, agent, optimizer, epochs, plot=False):
         history = []
 
         for _ in range(epochs):
@@ -34,15 +34,15 @@ class PolicyGradientEnvironment:
 
             history.append(loss.item())
 
-            agent.optimizer_zero_grad()
+            optimizer.zero_grad()
             loss.backward()
-            agent.optimizer_step()
+            optimizer.step()
 
         if plot:
             plt.plot(history)
             plt.show()
 
-    def train(self, agent, num_rollouts, train_steps=1, episodes_per_step=1, eval_episodes=0, plot=False):
+    def train(self, agent, optimizer, num_rollouts, train_steps=1, episodes_per_step=1, eval_episodes=0, plot=False):
         episode_reward = []
         evaluation_episode = []
         evaluation_reward = []
@@ -78,7 +78,11 @@ class PolicyGradientEnvironment:
                     state = next_state
 
             for _ in range(train_steps):
-                agent.step(self.buffer.all_episodes())
+                loss = agent.loss(self.buffer.all_episodes())
+                optimizer.zero_grad()
+                loss.backward()
+                # torch.nn.utils.clip_grad_value_(agent.parameters(), 100)
+                optimizer.step()
             self.buffer.clear()
 
             episode_reward.append(curr_reward / episodes_per_step)

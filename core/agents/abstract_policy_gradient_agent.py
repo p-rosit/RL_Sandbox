@@ -4,8 +4,8 @@ from buffer.transitions import batch_action_transition
 from core.agents.abstract_agent import AbstractAgent
 
 class AbstractPolicyGradientAgent(AbstractAgent):
-    def __init__(self, discount=0.99, max_grad=100):
-        super().__init__(discount=discount, max_grad=max_grad)
+    def __init__(self, discount=0.99):
+        super().__init__(discount=discount)
         self.policy_network = None
 
     def train(self):
@@ -30,16 +30,14 @@ class AbstractPolicyGradientAgent(AbstractAgent):
         batch_experiences = batch_action_transition(experiences)
         return self._pretrain_loss(*batch_experiences)
 
-    def _loss(self, policy_network, states, log_probs, actions, rewards):
+    def _compute_loss(self, policy_network, states, log_probs, actions, rewards):
         raise NotImplementedError
 
-    def _step(self, batch_experiences):
-        loss = self._loss(self.policy_network, *batch_experiences)
-        super()._step(loss)
+    def _loss(self, states, log_probs, actions, rewards):
+        return self._compute_loss(self.policy_network, states, log_probs, actions, rewards)
 
-    def step(self, experiences):
-        batch_experiences = batch_action_transition(experiences)
-        states, actions, rewards = batch_experiences
+    def loss(self, experiences):
+        states, actions, rewards = batch_action_transition(experiences)
 
         log_probs = []
         for episode_states, episode_actions in zip(states, actions):
@@ -52,4 +50,4 @@ class AbstractPolicyGradientAgent(AbstractAgent):
 
             log_probs.append(episode_log_probs)
 
-        self._step((states, log_probs, actions, rewards))
+        return self._loss(states, log_probs, actions, rewards)
