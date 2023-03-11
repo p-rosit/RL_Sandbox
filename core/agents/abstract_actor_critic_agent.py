@@ -11,11 +11,5 @@ class AbstractActorCritic(AbstractAgent):
     def parameters(self):
         raise NotImplementedError
 
-    def _step(self, loss):
-        self.optimizer.zero_grad()
-        loss.backward()
-        torch.nn.utils.clip_grad_value_(self.parameters(), self.max_grad)
-        self.optimizer.step()
-
-    def step(self, experiences):
+    def loss(self, experiences):
         raise NotImplementedError
