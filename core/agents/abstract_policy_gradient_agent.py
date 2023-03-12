@@ -1,6 +1,6 @@
 import torch
 from torch.distributions import Categorical
-from buffer.transitions import batch_action_transition
+from buffer.transitions import batch_transitions, batch_episodes
 from core.agents.abstract_agent import AbstractAgent
 
 class AbstractPolicyGradientAgent(AbstractAgent):
@@ -23,21 +23,21 @@ class AbstractPolicyGradientAgent(AbstractAgent):
     def parameters(self):
         return self.policy_network.parameters()
 
-    def _pretrain_loss(self, states, actions, rewards):
-        return self.policy_network.pretrain_loss(states, actions, rewards)
+    def _pretrain_loss(self, states, actions, rewards, masks):
+        return self.policy_network.pretrain_loss(states, actions, rewards, masks)
 
     def pretrain_loss(self, experiences):
-        batch_experiences = batch_action_transition(experiences)
+        batch_experiences = batch_transitions(experiences)
         return self._pretrain_loss(*batch_experiences)
 
-    def _compute_loss(self, policy_network, states, log_probs, actions, rewards):
+    def _compute_loss(self, policy_network, states, log_probs, actions, reward):
         raise NotImplementedError
 
     def _loss(self, states, log_probs, actions, rewards):
         return self._compute_loss(self.policy_network, states, log_probs, actions, rewards)
 
     def loss(self, experiences):
-        states, actions, rewards = batch_action_transition(experiences)
+        states, actions, rewards = batch_episodes(experiences)
 
         log_probs = []
         for episode_states, episode_actions in zip(states, actions):

@@ -26,11 +26,11 @@ class PolicyGradientEnvironment:
                 self.buffer.append(state, policy_action, reward, episode_terminated=done)
                 state = next_state
 
-    def pretrain(self, agent, optimizer, epochs, plot=False):
+    def pretrain(self, agent, optimizer, epochs, batch_size, plot=False):
         history = []
 
         for _ in range(epochs):
-            loss = agent.pretrain_loss(self.buffer.sample())
+            loss = agent.pretrain_loss(self.buffer.sample(batch_size=batch_size))
 
             history.append(loss.item())
 

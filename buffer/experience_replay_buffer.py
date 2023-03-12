@@ -68,7 +68,12 @@ class ReplayBuffer(AbstractBuffer):
             self.weights[episode_ind][ind] = sample_error.item()
 
     def all_episodes(self):
-        return self.buffer
+        episodes = []
+        for episode in self.buffer:
+            states, actions, rewards = zip(*episode)
+            episodes.append(ActionTransition(states, actions, rewards))
+
+        return episodes
 
     def clear(self):
         self.buffer = []
