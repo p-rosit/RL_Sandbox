@@ -30,7 +30,7 @@ class QLearningEnvironment:
         history = []
 
         for _ in range(epochs):
-            loss = agent.pretrain_loss(self.buffer.sample(batch_size))
+            loss = agent.pretrain_loss(self.buffer.sample(batch_size=batch_size))
 
             history.append(loss.item())
 

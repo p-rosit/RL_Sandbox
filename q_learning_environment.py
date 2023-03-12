@@ -36,9 +36,9 @@ def main():
 
     r = RandomAgent(env)
 
-    initial_episodes = 100
-    epochs = 100
-    pre_batch = 100
+    initial_episodes = 1000
+    epochs = 1000
+    pre_batch = 1000
 
     # net_1 = DenseQNetwork(input_size, hidden_sizes, output_size)
     # net_2 = DenseQNetwork(input_size, hidden_sizes, output_size)
@@ -61,7 +61,7 @@ def main():
     sq = AnnealAgent(q, r, start_steps=start_steps, eps_start=eps_start, eps_end=eps_end, decay_steps=eps_decay)
 
     environment.explore(r, initial_episodes)
-    # environment.pretrain(sq, optimizer, epochs, pre_batch, plot=True)
+    environment.pretrain(sq, optimizer, epochs, pre_batch, plot=True)
     environment.buffer.clear()
     environment.train(sq, optimizer, num_episodes, batch_size, train_steps=1, eval_episodes=1, td_steps=3, plot=True)
 
