@@ -103,7 +103,7 @@ class ClippedDoubleQLearning(AbstractDoubleQLearningAgent):
             estimated_next_values_2, _ = self.target_network_2(next_states).max(dim=1)
             estimated_next_action_values = torch.min(estimated_next_values_1, estimated_next_values_2)
         self.bellman_action_values = trajectory_reward.clone()
-        self.bellman_action_values[masks[-1]] += estimated_next_action_values
+        self.bellman_action_values[masks[-1]] += discount[-1] * estimated_next_action_values
 
         loss, td_error = super()._loss(states, actions, rewards, masks)
         self.bellman_action_values = None

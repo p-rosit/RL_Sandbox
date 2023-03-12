@@ -10,7 +10,7 @@ from networks.dense_networks import DenseQNetwork, DenseEgoMotionQNetwork
 from agents.random_agent import RandomAgent
 from agents.off_policy.deep_q_learning.q_learning import QLearningAgent
 from agents.off_policy.deep_q_learning.double_q_learning import DoubleQLearningAgent, ModifiedDoubleQLearningAgent, ClippedDoubleQLearning
-from agents.off_policy.deep_q_learning.multi_q_learning import MultiQLearningAgent
+from agents.off_policy.deep_q_learning.multi_q_learning import MultiQLearningAgent, ClippedMultiQLearningAgent
 from core.wrapper.agent_wrappers import AnnealAgent
 
 def main():
@@ -54,8 +54,9 @@ def main():
     # q = QLearningAgent(net_1, discount=gamma, tau=tau)
     # q = DoubleQLearningAgent(net_1, net_2, discount=gamma, tau=tau, policy_train=False)
     # q = ModifiedDoubleQLearningAgent(net_1, discount=gamma, tau=tau)
-    q = ClippedDoubleQLearning(net_1, net_2, discount=gamma, tau=tau)
+    # q = ClippedDoubleQLearning(net_1, net_2, discount=gamma, tau=tau)
     # q = MultiQLearningAgent(net_1, net_2, net_3, net_4, discount=gamma, tau=tau, policy_train=False)
+    q = ClippedMultiQLearningAgent(net_1, net_2, net_3, net_4, discount=gamma, tau=tau, policy_train=False)
     optimizer = optim.AdamW(q.parameters(), lr=lr, amsgrad=True)
 
     sq = AnnealAgent(q, r, start_steps=start_steps, eps_start=eps_start, eps_end=eps_end, decay_steps=eps_decay)
