@@ -13,13 +13,12 @@ class QLearningAgent(AbstractQLearningAgent):
         estimated_action_values = policy_network(states[0]).gather(1, actions[0].reshape(-1, 1)).squeeze()
 
         trajectory_reward = (discount[:-1] * rewards).sum(dim=0)
-        final_state_indices = masks[-1]
 
         with torch.no_grad():
-            next_states = states[-1, final_state_indices]
+            next_states = states[-1, masks[-1]]
             estimated_next_action_values, _ = self.target_network(next_states).max(dim=1)
         bellman_action_values = trajectory_reward.clone()
-        bellman_action_values[final_state_indices] += discount[-1] * estimated_next_action_values
+        bellman_action_values[masks[-1]] += discount[-1] * estimated_next_action_values
 
         extrinsic_loss = self.criterion(estimated_action_values, bellman_action_values)
         intrinsic_loss = policy_network.intrinsic_loss(states, actions, rewards, masks)

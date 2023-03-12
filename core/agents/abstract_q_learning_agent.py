@@ -94,19 +94,19 @@ class AbstractDoubleQLearningAgent(AbstractAgent):
         for param in self.policy_network_2.parameters():
             yield param
 
-    def _pretrain_loss(self, states, actions, rewards, non_final_next_states, non_final_mask):
-        loss_1 = self.policy_network_1.pretrain_loss(states, actions, rewards, non_final_next_states, non_final_mask)
-        loss_2 = self.policy_network_2.pretrain_loss(states, actions, rewards, non_final_next_states, non_final_mask)
+    def _pretrain_loss(self, states, actions, rewards, masks):
+        loss_1 = self.policy_network_1.pretrain_loss(states, actions, rewards, masks)
+        loss_2 = self.policy_network_2.pretrain_loss(states, actions, rewards, masks)
         return loss_1 + loss_2
 
     def pretrain_loss(self, experiences):
         batch_experiences = batch_transitions(experiences)
         return self._pretrain_loss(*batch_experiences)
 
-    def _loss(self, states, actions, rewards, non_final_next_states, non_final_mask):
-        loss_1 = self._compute_loss(0, states, actions, rewards, non_final_next_states, non_final_mask)
-        loss_2 = self._compute_loss(1, states, actions, rewards, non_final_next_states, non_final_mask)
-        return loss_1 + loss_2
+    def _loss(self, states, actions, rewards, masks):
+        loss_1, td_error_1 = self._compute_loss(0, states, actions, rewards, masks)
+        loss_2, td_error_2 = self._compute_loss(1, states, actions, rewards, masks)
+        return loss_1 + loss_2, (td_error_1 + td_error_2) / 2
 
     def loss(self, experiences):
         batch_experiences = batch_transitions(experiences)
@@ -151,24 +151,27 @@ class AbstractMultiQlearningAgent(AbstractAgent):
             for param in policy_network.parameters():
                 yield param
 
-    def _pretrain_loss(self, states, actions, rewards, non_final_next_states, non_final_mask):
+    def _pretrain_loss(self, states, actions, rewards, masks):
         loss = torch.zeros(1)
         for policy_network in self.policy_networks:
-            loss += policy_network.pretrain_loss(states, actions, rewards, non_final_next_states, non_final_mask)
+            loss += policy_network.pretrain_loss(states, actions, rewards, masks)
         return loss
 
     def pretrain_loss(self, experiences):
         batch_experiences = batch_transitions(experiences)
         return self._pretrain_loss(*batch_experiences)
 
-    def _compute_loss(self, ind, states, actions, rewards, non_final_next_states, non_final_mask):
+    def _compute_loss(self, ind, states, actions, rewards, masks):
         raise NotImplementedError
 
-    def _loss(self, states, actions, rewards, non_final_next_states, non_final_mask):
-        loss = torch.tensor([0.0])
+    def _loss(self, states, actions, rewards, masks):
+        loss = torch.zeros(1)
+        td_error = torch.zeros(masks.size(1))
         for ind, policy_network in enumerate(self.policy_networks):
-            loss += self._compute_loss(ind, states, actions, rewards, non_final_next_states, non_final_mask)
-        return loss
+            l, td = self._compute_loss(ind, states, actions, rewards, masks)
+            loss += l
+            td_error += td
+        return loss, td_error / masks.size(1)
 
     def loss(self, experiences):
         batch_experiences = batch_transitions(experiences)
