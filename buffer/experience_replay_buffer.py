@@ -1,6 +1,5 @@
 import numpy as np
-import torch
-from buffer.transitions import Transition, ActionTransition
+from buffer.transitions import Experience
 from buffer.abstract_buffer import AbstractBuffer
 
 rng = np.random.default_rng()
@@ -30,7 +29,7 @@ class ReplayBuffer(AbstractBuffer):
         return episode_weights, normalized_weights
 
     def append(self, state, action, reward, episode_terminated=False):
-        experience = ActionTransition(state, action, reward)
+        experience = Experience(state, action, reward)
         self.episode.append(experience)
 
         if episode_terminated:
@@ -59,7 +58,7 @@ class ReplayBuffer(AbstractBuffer):
             if len(self.buffer[episode_ind]) > ind + trajectory_length:
                 states = (*states, self.buffer[episode_ind][ind + trajectory_length].state)
 
-            trajectories.append(ActionTransition(states, actions, rewards))
+            trajectories.append(Experience(states, actions, rewards))
 
         return trajectories
 
@@ -71,7 +70,7 @@ class ReplayBuffer(AbstractBuffer):
         episodes = []
         for episode in self.buffer:
             states, actions, rewards = zip(*episode)
-            episodes.append(ActionTransition(states, actions, rewards))
+            episodes.append(Experience(states, actions, rewards))
 
         return episodes
 
@@ -83,9 +82,9 @@ class ReplayBuffer(AbstractBuffer):
 if __name__ == '__main__':
     b = ReplayBuffer(max_size=2)
 
-    b.append([1, 2], 2, 3, [4, 5])
-    b.append([2, 3], 3, 4, [5, 6])
-    b.append([3, 4], 4, 5, [6, 7])
+    b.append([1, 2], 2, 3)
+    b.append([2, 3], 3, 4)
+    b.append([3, 4], 4, 5)
 
     print(b.buffer)
     print(b.sample(2))

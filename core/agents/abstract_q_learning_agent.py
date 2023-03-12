@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from buffer.transitions import batch_transitions
+from buffer.transitions import batch_trajectories
 from core.agents.abstract_agent import AbstractAgent
 
 class AbstractQLearningAgent(AbstractAgent):
@@ -31,7 +31,7 @@ class AbstractQLearningAgent(AbstractAgent):
         return self.policy_network.pretrain_loss(states, actions, rewards, masks)
 
     def pretrain_loss(self, experiences):
-        batch_experiences = batch_transitions(experiences)
+        batch_experiences = batch_trajectories(experiences)
         return self._pretrain_loss(*batch_experiences)
 
     def _compute_loss(self, policy_network, target_network, states, actions, rewards, masks):
@@ -41,7 +41,7 @@ class AbstractQLearningAgent(AbstractAgent):
         return self._compute_loss(self.policy_network, self.target_network, states, actions, rewards, masks)
 
     def loss(self, experiences):
-        batch_experiences = batch_transitions(experiences)
+        batch_experiences = batch_trajectories(experiences)
         return self._loss(*batch_experiences)
 
     def update_target(self):
@@ -100,7 +100,7 @@ class AbstractDoubleQLearningAgent(AbstractAgent):
         return loss_1 + loss_2
 
     def pretrain_loss(self, experiences):
-        batch_experiences = batch_transitions(experiences)
+        batch_experiences = batch_trajectories(experiences)
         return self._pretrain_loss(*batch_experiences)
 
     def _loss(self, states, actions, rewards, masks):
@@ -109,7 +109,7 @@ class AbstractDoubleQLearningAgent(AbstractAgent):
         return loss_1 + loss_2, (td_error_1 + td_error_2) / 2
 
     def loss(self, experiences):
-        batch_experiences = batch_transitions(experiences)
+        batch_experiences = batch_trajectories(experiences)
         return self._loss(*batch_experiences)
 
     def update_target(self):
@@ -158,7 +158,7 @@ class AbstractMultiQlearningAgent(AbstractAgent):
         return loss
 
     def pretrain_loss(self, experiences):
-        batch_experiences = batch_transitions(experiences)
+        batch_experiences = batch_trajectories(experiences)
         return self._pretrain_loss(*batch_experiences)
 
     def _compute_loss(self, ind, states, actions, rewards, masks):
@@ -174,7 +174,7 @@ class AbstractMultiQlearningAgent(AbstractAgent):
         return loss, td_error / masks.size(1)
 
     def loss(self, experiences):
-        batch_experiences = batch_transitions(experiences)
+        batch_experiences = batch_trajectories(experiences)
         return self._loss(*batch_experiences)
 
     def update_target(self):

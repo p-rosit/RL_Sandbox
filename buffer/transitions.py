@@ -1,10 +1,10 @@
 from collections import namedtuple
 import torch
 
-Transition = namedtuple('Transition', ('state', 'action', 'reward', 'next_state'))
+Experience = namedtuple('Experience', ('state', 'action', 'reward'))
 
-def batch_transitions(experiences):
-    batch_experiences = ActionTransition(*zip(*experiences))
+def batch_trajectories(experiences):
+    batch_experiences = Experience(*zip(*experiences))
     states = []
     actions = []
     rewards = []
@@ -35,8 +35,6 @@ def batch_transitions(experiences):
     masks = torch.cat(masks, dim=0)
 
     return states, actions, rewards, masks
-
-ActionTransition = namedtuple('ActionTransition', ('state', 'action', 'reward'))
 
 def batch_episodes(experiences):
     states = []
