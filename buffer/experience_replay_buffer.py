@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 from buffer.transitions import Transition, ActionTransition
 from buffer.abstract_buffer import AbstractBuffer
 
@@ -33,7 +34,7 @@ class ReplayBuffer(AbstractBuffer):
 
         if episode_terminated:
             self.buffer.append(self.episode)
-            self.weights.append([1 for _ in range(len(self.episode)-1)])
+            self.weights.append([1 for _ in self.episode])
 
             self.episode = []
             while len(self) > self.max_size and len(self.buffer) > 1:
@@ -48,12 +49,14 @@ class ReplayBuffer(AbstractBuffer):
 
         trajectories = []
         for episode_ind in self.episode_inds:
-            ind = rng.choice(len(self.buffer[episode_ind])-1, p=normalized_weights[episode_ind])
+            ind = rng.choice(len(self.buffer[episode_ind]), p=normalized_weights[episode_ind])
             self.inds.append(ind)
 
-            experiences = self.buffer[episode_ind][ind:min(len(self.buffer[episode_ind]) - 1, ind+trajectory_length)]
+            experiences = self.buffer[episode_ind][ind:min(len(self.buffer[episode_ind]), ind+trajectory_length)]
             states, actions, rewards = zip(*experiences)
-            states = (*states, self.buffer[episode_ind][min(len(self.buffer[episode_ind]) - 1, ind+trajectory_length)].state)
+
+            if len(self.buffer[episode_ind]) > ind + trajectory_length:
+                states = (*states, self.buffer[episode_ind][ind + trajectory_length].state)
 
             trajectories.append(ActionTransition(states, actions, rewards))
 

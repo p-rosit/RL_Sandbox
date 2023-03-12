@@ -24,7 +24,7 @@ def main():
     hidden_sizes = [128, 128]
     output_size = 2
 
-    batch_size = 3
+    batch_size = 256
     gamma = 0.99
     eps_start = 0.9
     eps_end = 0.05
