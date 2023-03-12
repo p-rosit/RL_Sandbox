@@ -44,11 +44,13 @@ class QLearningAgent(AbstractQLearningAgent):
         # print(bellman_action_values)
 
         extrinsic_loss = self.criterion(estimated_action_values, bellman_action_values)
-
+        td_error = torch.abs(bellman_action_values - estimated_action_values).detach()
         # print(extrinsic_loss)
         #
         # error(':)')
-        return extrinsic_loss
+        # print(td_error)
+        # error(':)')
+        return extrinsic_loss, td_error
 
         # error(':)')
         #

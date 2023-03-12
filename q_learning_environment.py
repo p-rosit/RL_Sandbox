@@ -45,7 +45,7 @@ def main():
     # net_3 = DenseQNetwork(input_size, hidden_sizes, output_size)
     # net_4 = DenseQNetwork(input_size, hidden_sizes, output_size)
 
-    alpha_start = 10
+    alpha_start = 0
     net_1 = DenseEgoMotionQNetwork(input_size, hidden_sizes, output_size, alpha_start=alpha_start)
     net_2 = DenseEgoMotionQNetwork(input_size, hidden_sizes, output_size, alpha_start=alpha_start)
     net_3 = DenseEgoMotionQNetwork(input_size, hidden_sizes, output_size, alpha_start=alpha_start)
@@ -60,10 +60,10 @@ def main():
 
     sq = AnnealAgent(q, r, start_steps=start_steps, eps_start=eps_start, eps_end=eps_end, decay_steps=eps_decay)
 
-    # environment.explore(r, initial_episodes)
+    environment.explore(r, initial_episodes)
     # environment.pretrain(sq, optimizer, epochs, pre_batch, plot=True)
-    # environment.buffer.clear()
-    environment.train(sq, optimizer, num_episodes, batch_size, train_steps=1, eval_episodes=1, td_steps=1, plot=True)
+    environment.buffer.clear()
+    environment.train(sq, optimizer, num_episodes, batch_size, train_steps=1, eval_episodes=1, td_steps=3, plot=True)
 
     env.close()
 

@@ -6,11 +6,12 @@ from buffer.abstract_buffer import AbstractBuffer
 rng = np.random.default_rng()
 
 class ReplayBuffer(AbstractBuffer):
-    def __init__(self, max_size=100):
+    def __init__(self, max_size=100, default_prob=100):
         super().__init__(max_size=max_size)
         self.ind = 0
         self.buffer = []
         self.weights = []
+        self.default_prob = default_prob
 
         self.episode_inds = []
         self.inds = []
@@ -34,7 +35,7 @@ class ReplayBuffer(AbstractBuffer):
 
         if episode_terminated:
             self.buffer.append(self.episode)
-            self.weights.append([1 for _ in self.episode])
+            self.weights.append([self.default_prob for _ in self.episode])
 
             self.episode = []
             while len(self) > self.max_size and len(self.buffer) > 1:
@@ -62,14 +63,16 @@ class ReplayBuffer(AbstractBuffer):
 
         return trajectories
 
-    def update(self, sample_error):
-        pass
+    def update(self, sample_errors):
+        for episode_ind, ind, sample_error in zip(self.episode_inds, self.inds, sample_errors):
+            self.weights[episode_ind][ind] = sample_error.item()
 
     def all_episodes(self):
         return self.buffer
 
     def clear(self):
         self.buffer = []
+        self.weights = []
         self.episode = []
 
 if __name__ == '__main__':
