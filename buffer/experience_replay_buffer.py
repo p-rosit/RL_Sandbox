@@ -1,40 +1,16 @@
 import numpy as np
-from buffer.transitions import Transition, ActionTransition
+from buffer.transitions import Experience
 from buffer.abstract_buffer import AbstractBuffer
 
 rng = np.random.default_rng()
 
 class ReplayBuffer(AbstractBuffer):
-    def __init__(self, max_size=1000):
-        super().__init__(max_size=max_size)
-        self.ind = 0
-        self.buffer = []
-
-    def __len__(self):
-        return len(self.buffer)
-
-    def append(self, state, action, reward, next_state):
-        experience = Transition(state, action, reward, next_state)
-
-        if len(self.buffer) < self.max_size:
-            self.buffer.append(experience)
-        else:
-            self.buffer[self.ind] = experience
-
-        self.ind = (self.ind + 1) % self.max_size
-
-    def sample(self, batch_size=1):
-        return [self.buffer[ind] for ind in rng.choice(len(self.buffer), batch_size)]
-
-    def clear(self):
-        self.buffer = []
-
-class ModReplayBuffer(AbstractBuffer):
-    def __init__(self, max_size=100):
+    def __init__(self, max_size=100, default_prob=100):
         super().__init__(max_size=max_size)
         self.ind = 0
         self.buffer = []
         self.weights = []
+        self.default_prob = default_prob
 
         self.episode_inds = []
         self.inds = []
@@ -53,12 +29,12 @@ class ModReplayBuffer(AbstractBuffer):
         return episode_weights, normalized_weights
 
     def append(self, state, action, reward, episode_terminated=False):
-        experience = ActionTransition(state, action, reward)
+        experience = Experience(state, action, reward)
         self.episode.append(experience)
 
         if episode_terminated:
             self.buffer.append(self.episode)
-            self.weights.append([1 for _ in self.episode])
+            self.weights.append([self.default_prob for _ in self.episode])
 
             self.episode = []
             while len(self) > self.max_size and len(self.buffer) > 1:
@@ -76,34 +52,39 @@ class ModReplayBuffer(AbstractBuffer):
             ind = rng.choice(len(self.buffer[episode_ind]), p=normalized_weights[episode_ind])
             self.inds.append(ind)
 
-            experiences = self.buffer[episode_ind][ind:ind+trajectory_length]
+            experiences = self.buffer[episode_ind][ind:min(len(self.buffer[episode_ind]), ind+trajectory_length)]
             states, actions, rewards = zip(*experiences)
 
             if len(self.buffer[episode_ind]) > ind + trajectory_length:
                 states = (*states, self.buffer[episode_ind][ind + trajectory_length].state)
-            else:
-                states = (*states, None)
 
-            trajectories.append(ActionTransition(states, actions, rewards))
+            trajectories.append(Experience(states, actions, rewards))
 
         return trajectories
 
-    def update(self, sample_error):
-        pass
+    def update(self, sample_errors):
+        for episode_ind, ind, sample_error in zip(self.episode_inds, self.inds, sample_errors):
+            self.weights[episode_ind][ind] = sample_error.item()
 
     def all_episodes(self):
-        return self.buffer
+        episodes = []
+        for episode in self.buffer:
+            states, actions, rewards = zip(*episode)
+            episodes.append(Experience(states, actions, rewards))
+
+        return episodes
 
     def clear(self):
         self.buffer = []
+        self.weights = []
         self.episode = []
 
 if __name__ == '__main__':
     b = ReplayBuffer(max_size=2)
 
-    b.append([1, 2], 2, 3, [4, 5])
-    b.append([2, 3], 3, 4, [5, 6])
-    b.append([3, 4], 4, 5, [6, 7])
+    b.append([1, 2], 2, 3)
+    b.append([2, 3], 3, 4)
+    b.append([3, 4], 4, 5)
 
     print(b.buffer)
     print(b.sample(2))

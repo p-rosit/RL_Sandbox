@@ -1,9 +1,8 @@
 import torch
-from torch import nn
 from torch import optim
 import gymnasium as gym
 
-from buffer.experience_replay_buffer import ModReplayBuffer
+from buffer.experience_replay_buffer import ReplayBuffer
 from environment.policy_gradient_environment import PolicyGradientEnvironment
 
 from networks.dense_networks import DensePolicyNetwork, DenseEgoMotionPolicyNetwork
@@ -15,7 +14,7 @@ def main():
     # env = gym.make("LunarLander-v2", render_mode="human")
     # env = gym.make("LunarLander-v2")
     env = gym.make("CartPole-v1")
-    buffer = ModReplayBuffer(max_size=torch.inf)
+    buffer = ReplayBuffer(max_size=torch.inf)
     environment = PolicyGradientEnvironment(env, buffer)
 
     input_size = 4
@@ -27,23 +26,23 @@ def main():
     num_rollouts = 5000
 
     initial_episodes = 1000
-    epochs = 100
+    epochs = 1000
     pre_batch = 1000
 
     # net = DensePolicyNetwork(input_size, hidden_sizes, output_size)
 
-    alpha_start = 10
+    alpha_start = 0
     net = DenseEgoMotionPolicyNetwork(input_size, hidden_sizes, output_size, alpha_start=alpha_start)
 
     # pn = ReinforceAgent(net, discount=gamma)
     # pn = ModifiedReinforceAgent(net, truncate_grad_trajectory=600, discount=gamma)
-    # pn = ReinforceAdvantageAgent(net, discount=gamma)
-    pn = ModifiedReinforceAdvantageAgent(net, truncate_grad_trajectory=600, discount=gamma)
+    pn = ReinforceAdvantageAgent(net, discount=gamma)
+    # pn = ModifiedReinforceAdvantageAgent(net, truncate_grad_trajectory=600, discount=gamma)
     optimizer = optim.AdamW(pn.parameters(), lr=lr, amsgrad=True)
 
-    # environment.explore(RandomAgent(env), initial_episodes)
-    # environment.pretrain(pn, optimizer, epochs, plot=True)
-    # environment.buffer.clear()
+    environment.explore(RandomAgent(env), initial_episodes)
+    environment.pretrain(pn, optimizer, epochs, pre_batch, plot=True)
+    environment.buffer.clear()
     environment.train(pn, optimizer, num_rollouts, train_steps=1, episodes_per_step=16, eval_episodes=10, plot=True)
 
     env.close()

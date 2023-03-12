@@ -8,15 +8,21 @@ class QLearningAgent(AbstractQLearningAgent):
         self.policy_network = policy_network
         self.target_network = SoftUpdateModel(policy_network, tau=tau)
 
-    def _compute_loss(self, policy_network, target_network, states, actions, rewards, non_final_next_states, non_final_mask):
-        estimated_action_values = policy_network(states).gather(1, actions).squeeze()
+    def _compute_loss(self, policy_network, target_network, states, actions, rewards, masks):
+        discount = torch.pow(self.discount, torch.arange(len(masks) + 1)).reshape(-1, 1)
+        estimated_action_values = policy_network(states[0]).gather(1, actions[0].reshape(-1, 1)).squeeze()
+
+        trajectory_reward = (discount[:-1] * rewards).sum(dim=0)
 
         with torch.no_grad():
-            estimated_next_action_values, _ = self.target_network(non_final_next_states).max(dim=1)
-        bellman_action_values = rewards
-        bellman_action_values[non_final_mask] += self.discount * estimated_next_action_values
+            next_states = states[-1, masks[-1]]
+            estimated_next_action_values, _ = self.target_network(next_states).max(dim=1)
+        bellman_action_values = trajectory_reward.clone()
+        bellman_action_values[masks[-1]] += discount[-1] * estimated_next_action_values
 
         extrinsic_loss = self.criterion(estimated_action_values, bellman_action_values)
-        intrinsic_loss = policy_network.intrinsic_loss(states, actions, rewards, non_final_next_states, non_final_mask)
+        intrinsic_loss = policy_network.intrinsic_loss(states, actions, rewards, masks)
 
-        return extrinsic_loss + intrinsic_loss
+        td_error = torch.abs(bellman_action_values - estimated_action_values).detach()
+
+        return extrinsic_loss + intrinsic_loss, td_error

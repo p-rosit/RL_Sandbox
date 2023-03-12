@@ -23,15 +23,14 @@ class QLearningEnvironment:
                 else:
                     next_state = torch.tensor(observation, dtype=torch.float32).unsqueeze(0)
 
-                self.buffer.append(state, policy_action, reward, next_state)
-                # self.buffer.append(state, policy_action, reward, episode_terminated=done)
+                self.buffer.append(state, policy_action, reward, episode_terminated=done)
                 state = next_state
 
     def pretrain(self, agent, optimizer, epochs, batch_size, plot=False):
         history = []
 
         for _ in range(epochs):
-            loss = agent.pretrain_loss(self.buffer.sample(batch_size))
+            loss = agent.pretrain_loss(self.buffer.sample(batch_size=batch_size))
 
             history.append(loss.item())
 
@@ -74,19 +73,18 @@ class QLearningEnvironment:
                 else:
                     next_state = torch.tensor(observation, dtype=torch.float32).unsqueeze(0)
 
-                self.buffer.append(state, policy_action, reward, next_state)
-                # self.buffer.append(state, policy_action, reward, episode_terminated=done)
+                self.buffer.append(state, policy_action, reward, episode_terminated=done)
                 state = next_state
 
                 if len(self.buffer) > batch_size:
                     for _ in range(train_steps):
-                        loss = agent.loss(self.buffer.sample(batch_size=batch_size))
+                        loss, td_error = agent.loss(self.buffer.sample(batch_size=batch_size, trajectory_length=td_steps))
+                        self.buffer.update(td_error)
                         optimizer.zero_grad()
                         loss.backward()
                         torch.nn.utils.clip_grad_value_(agent.parameters(), 100)
                         optimizer.step()
                         agent.update_target()
-                        # loss = agent.step(self.buffer.sample(batch_size=batch_size, trajectory_length=td_steps))
 
             episode_reward.append(curr_reward)
 

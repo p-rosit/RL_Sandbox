@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from buffer.transitions import batch_transitions
+from buffer.transitions import batch_trajectories
 
 def pre_train_state_dynamics(net, optimizer, buffer, epochs, batch_size, plot=False):
     loss_history = []
@@ -8,7 +8,7 @@ def pre_train_state_dynamics(net, optimizer, buffer, epochs, batch_size, plot=Fa
 
     for _ in range(epochs):
         experiences = buffer.sample(batch_size)
-        states, actions, _, next_states, non_final_mask = batch_transitions(experiences)
+        states, actions, _, next_states, non_final_mask = batch_trajectories(experiences)
         states = states[non_final_mask]
         actions = actions[non_final_mask]
 

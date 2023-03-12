@@ -1,5 +1,3 @@
-import torch
-
 class AbstractAgent:
     def __init__(self, discount=0.99):
         self.training = True

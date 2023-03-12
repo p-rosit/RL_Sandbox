@@ -1,5 +1,5 @@
 from buffer.abstract_buffer import AbstractBuffer
-from buffer.transitions import ActionTransition
+from buffer.transitions import Experience
 
 class OnlineEpisodeBuffer(AbstractBuffer):
     def __init__(self):
@@ -11,7 +11,7 @@ class OnlineEpisodeBuffer(AbstractBuffer):
         return sum(len(episode) for episode in self.buffer)
 
     def append(self, state, action, reward, episode_terminated=False):
-        self.episode.append(ActionTransition(state, action, reward))
+        self.episode.append(Experience(state, action, reward))
         if episode_terminated:
             self.buffer.append(self.episode)
             self.episode = []
