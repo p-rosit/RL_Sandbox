@@ -34,11 +34,11 @@ class AbstractQLearningAgent(AbstractAgent):
         batch_experiences = batch_trajectories(experiences)
         return self._pretrain_loss(*batch_experiences)
 
-    def _compute_loss(self, policy_network, target_network, states, actions, rewards, masks):
+    def _compute_loss(self, states, actions, rewards, masks):
         raise NotImplementedError
 
     def _loss(self, states, actions, rewards, masks):
-        return self._compute_loss(self.policy_network, self.target_network, states, actions, rewards, masks)
+        return self._compute_loss(states, actions, rewards, masks)
 
     def loss(self, experiences):
         batch_experiences = batch_trajectories(experiences)
