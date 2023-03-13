@@ -20,6 +20,9 @@ class AbstractNetwork(nn.Module):
 class AbstractDenseNetwork(AbstractNetwork):
     def __init__(self, input_size, hidden_sizes, output_size):
         super().__init__()
+        self.network = self._make_network(input_size, hidden_sizes, output_size)
+
+    def _make_network(self, input_size, hidden_sizes, output_size):
         layer_sizes = (input_size, *hidden_sizes, output_size)
 
         layers = []
@@ -28,7 +31,7 @@ class AbstractDenseNetwork(AbstractNetwork):
             layers.append(nn.ReLU())
         layers.pop()
 
-        self.network = nn.Sequential(*layers)
+        return nn.Sequential(*layers)
 
     def forward(self, x):
         return self.network(x)

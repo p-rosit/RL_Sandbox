@@ -3,7 +3,7 @@ from torch.distributions import Categorical
 from buffer.transitions import batch_trajectories, batch_episodes
 from core.agents.abstract_agent import AbstractAgent
 
-class AbstractActorCritic(AbstractAgent):
+class AbstractActorCriticAgent(AbstractAgent):
     def __init__(self, network, discount=0.99):
         super().__init__(discount=discount)
         self.actor_critic = network

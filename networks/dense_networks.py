@@ -123,3 +123,30 @@ class DenseEgoMotionPolicyNetwork(AbstractDenseEgoMotionNetwork):
 
     def action_value(self, state):
         raise RuntimeError('Policy network does not estimate value.')
+
+class DenseActorCriticNetwork(AbstractDenseNetwork):
+    def __init__(self, input_size, actor_hidden_sizes, output_size, critic_hidden_sizes):
+        super().__init__(1, [], 1)
+        self.actor = self._make_network(input_size, actor_hidden_sizes, output_size)
+        self.critic = self._make_network(input_size, critic_hidden_sizes, 1)
+
+    def forward(self, x):
+        action_logits = self.actor(x)
+        value = self.critic(x)
+        return action_logits, value
+
+    def action(self, state):
+        logits = self.actor(state)
+        dist = Categorical(logits=logits)
+
+        action = dist.sample()
+
+        return action.view(-1, 1), action.item()
+
+    def action_value(self, state):
+        logits = self.actor(state)
+        dist = Categorical(logits=logits)
+
+        action = dist.sample()
+
+        return self.critic(state), action.view(-1, 1), action.item()
