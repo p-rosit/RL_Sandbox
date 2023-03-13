@@ -1,4 +1,3 @@
-from torch import nn
 from torch import optim
 import gymnasium as gym
 
@@ -64,7 +63,7 @@ def main():
     environment.explore(r, initial_episodes)
     environment.pretrain(sq, optimizer, epochs, pre_batch, plot=True)
     environment.buffer.clear()
-    environment.train(sq, optimizer, num_episodes, batch_size, train_steps=1, eval_episodes=1, td_steps=3, plot=True)
+    environment.train(sq, optimizer, num_episodes, batch_size, train_steps=1, eval_episodes=1, td_steps=1, plot=True)
 
     env.close()
 

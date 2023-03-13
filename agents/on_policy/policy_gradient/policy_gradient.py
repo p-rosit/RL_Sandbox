@@ -2,9 +2,6 @@ import torch
 from core.agents.abstract_policy_gradient_agent import AbstractPolicyGradientAgent
 
 class ReinforceAgent(AbstractPolicyGradientAgent):
-    def __init__(self, network, discount=0.99):
-        super().__init__(discount=discount)
-        self.policy_network = network
 
     def _compute_loss(self, policy_network, states, log_probs, actions, rewards):
         max_trajectory = max(reward.size(0) for reward in rewards)
@@ -33,8 +30,7 @@ class ReinforceAgent(AbstractPolicyGradientAgent):
 
 class ModifiedReinforceAgent(AbstractPolicyGradientAgent):
     def __init__(self, network, truncate_grad_trajectory=torch.inf, discount=0.99):
-        super().__init__(discount=discount)
-        self.policy_network = network
+        super().__init__(network, discount=discount)
         self.truncate_grad_trajectory = truncate_grad_trajectory
 
     def _compute_loss(self, policy_network, states, log_probs, actions, rewards):

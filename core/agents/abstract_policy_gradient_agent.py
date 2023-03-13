@@ -4,9 +4,9 @@ from buffer.transitions import batch_trajectories, batch_episodes
 from core.agents.abstract_agent import AbstractAgent
 
 class AbstractPolicyGradientAgent(AbstractAgent):
-    def __init__(self, discount=0.99):
+    def __init__(self, policy_network, discount=0.99):
         super().__init__(discount=discount)
-        self.policy_network = None
+        self.policy_network = policy_network
 
     def train(self):
         self.policy_network.train()
