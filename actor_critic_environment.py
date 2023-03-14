@@ -22,7 +22,7 @@ def main():
 
     gamma = 0.99
     lr = 1e-4
-    num_episodes = 600
+    num_rollouts = 5000
 
     initial_episodes = 1000
     epochs = 1000
@@ -36,7 +36,7 @@ def main():
     # environment.explore(RandomAgent(env), initial_episodes)
     # environment.pretrain(ac, optimizer, epochs, pre_batch, plot=True)
     # environment.buffer.clear()
-    environment.train(ac, optimizer, num_episodes, train_steps=1, eval_episodes=1, td_steps=3, plot=True)
+    environment.train(ac, optimizer, num_rollouts, train_steps=1, episodes_per_step=16, eval_episodes=10, td_steps=3, plot=True)
 
     env.close()
 
