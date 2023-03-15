@@ -26,7 +26,7 @@ class AbstractActorCriticAgent(AbstractAgent):
         return policy_action.view(-1, 1), env_action
 
     def parameters(self):
-        for param in self.actor.parameters()
+        for param in self.actor.parameters():
             yield param
         for param in self.critic.parameters():
             yield param
@@ -49,3 +49,6 @@ class AbstractActorCriticAgent(AbstractAgent):
     def loss(self, experiences, trajectory_length=1):
         states, actions, rewards = batch_episodes(experiences)
         return self._loss(states, actions, rewards, trajectory_length)
+
+    def update_target(self):
+        self.target_critic.update(self.critic)
