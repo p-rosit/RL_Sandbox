@@ -12,22 +12,29 @@ class AbstractActorCriticAgent(AbstractAgent):
         self.target_critic = SoftUpdateModel(self.critic, tau=tau)
 
     def train(self):
-        self.actor_critic.train()
+        self.actor.train()
+        self.critic.train()
         super().train()
 
     def eval(self):
-        self.actor_critic.eval()
+        self.actor.eval()
+        self.critic.eval()
         super().eval()
 
     def sample(self, state):
-        policy_action, env_action = self.actor_critic.action(state)
+        policy_action, env_action = self.actor.action(state)
         return policy_action.view(-1, 1), env_action
 
     def parameters(self):
-        return self.actor_critic.parameters()
+        for param in self.actor.parameters()
+            yield param
+        for param in self.critic.parameters():
+            yield param
 
     def _pretrain_loss(self, states, actions, rewards, masks):
-        return self.actor_critic.pretrain_loss(states, actions, rewards, masks)
+        actor_loss = self.actor.pretrain_loss(states, actions, rewards, masks)
+        critic_loss = self.critic.pretrain_loss(states, actions, rewards, masks)
+        return actor_loss + critic_loss
 
     def pretrain_loss(self, experiences):
         batch_experiences = batch_trajectories(experiences)
