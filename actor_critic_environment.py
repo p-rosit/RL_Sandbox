@@ -4,7 +4,8 @@ import gymnasium as gym
 from buffer.experience_replay_buffer import ReplayBuffer
 from environment.actor_critic_environment import ActorCriticEnvironment
 
-from networks.dense_networks import DenseActorCriticNetwork
+from networks.policy_gradient.dense_networks import DensePolicyNetwork, DenseEgoMotionPolicyNetwork
+from networks.actor_critic.dense_networks import DenseCriticNetwork
 
 from agents.on_policy.actor_critic.actor_critic import ActorCriticAgent
 
@@ -28,9 +29,11 @@ def main():
     epochs = 1000
     pre_batch = 1000
 
-    net = DenseActorCriticNetwork(input_size, actor_hidden_sizes, output_size, critic_hidden_sizes)
+    # net = DenseActorCriticNetwork(input_size, actor_hidden_sizes, output_size, critic_hidden_sizes)
+    actor = DensePolicyNetwork(input_size, actor_hidden_sizes, output_size)
+    critic = DenseCriticNetwork(input_size, critic_hidden_sizes)
 
-    ac = ActorCriticAgent(net, discount=gamma)
+    ac = ActorCriticAgent(actor, critic, discount=gamma)
     optimizer = optim.AdamW(ac.parameters(), lr=lr, amsgrad=True)
 
     # environment.explore(RandomAgent(env), initial_episodes)

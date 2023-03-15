@@ -1,12 +1,15 @@
 from torch import nn
 from buffer.transitions import batch_trajectories, batch_episodes
 from core.agents.abstract_agent import AbstractAgent
+from core.wrapper.network_wrappers import SoftUpdateModel
 
 class AbstractActorCriticAgent(AbstractAgent):
-    def __init__(self, network, discount=0.99):
+    def __init__(self, actor, critic, discount=0.99, tau=0.005):
         super().__init__(discount=discount)
         self.criterion = nn.SmoothL1Loss()
-        self.actor_critic = network
+        self.actor = actor
+        self.critic = critic
+        self.target_critic = SoftUpdateModel(self.critic, tau=tau)
 
     def train(self):
         self.actor_critic.train()
