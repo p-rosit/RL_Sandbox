@@ -5,7 +5,7 @@ import gymnasium as gym
 from buffer.experience_replay_buffer import ReplayBuffer
 from environment.policy_gradient_environment import PolicyGradientEnvironment
 
-from networks.dense_networks import DensePolicyNetwork, DenseEgoMotionPolicyNetwork
+from networks.policy_gradient.dense_networks import DensePolicyNetwork, DenseEgoMotionPolicyNetwork
 from agents.random_agent import RandomAgent
 from agents.on_policy.policy_gradient.policy_gradient import ReinforceAgent, ModifiedReinforceAgent
 from agents.on_policy.policy_gradient.policy_gradient_baseline import ReinforceAdvantageAgent, ModifiedReinforceAdvantageAgent
