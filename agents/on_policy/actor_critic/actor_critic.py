@@ -18,7 +18,10 @@ class ActorCriticAgent(AbstractActorCriticAgent):
         log_probs = []
         advantages = []
         for episode_states, episode_rewards, episode_actions in zip(states, rewards, actions):
-            logits, values = self.actor_critic(episode_states)
+            logits = self.actor(episode_states)
+            values = self.target_critic.value(episode_states, None)
+            print(values)
+            error(':)')
             episode_log_probs = torch.zeros(logits.size(0), 1)
 
             for i, action in enumerate(episode_actions):

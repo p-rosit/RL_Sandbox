@@ -14,6 +14,9 @@ class AbstractNetwork(nn.Module):
     def action(self, state):
         raise NotImplementedError
 
+    def value(self, state, action):
+        raise NotImplementedError
+
     def action_value(self, state):
         raise NotImplementedError
 
@@ -33,8 +36,8 @@ class AbstractDenseNetwork(AbstractNetwork):
 
         return nn.Sequential(*layers)
 
-    def forward(self, x):
-        return self.network(x)
+    def forward(self, *args, **kwargs):
+        return self.network(*args, **kwargs)
 
 class AbstractDenseEgoMotionNetwork(AbstractNetwork):
     def __init__(self, input_size, hidden_sizes, output_size):
@@ -55,8 +58,20 @@ class AbstractDenseEgoMotionNetwork(AbstractNetwork):
         self.action_classification_layer = nn.Linear(2 * hidden_sizes[-1], output_size)
         self.softmax = nn.Softmax(dim=1)
 
-    def pretrain_loss(self, *args, **kwargs):
+    def pretrain_loss(self, states, actions, rewards, masks):
+        intermediate_1 = self.initial_network(states[0, masks[0]])
+        intermediate_2 = self.future_network(states[1, masks[0]])
+
+        intermediate = torch.cat((intermediate_1, intermediate_2), dim=1)
+        logits = self.action_classification_layer(intermediate)
+        classification = self.softmax(logits)
+
+        ego_loss = self.loss_function(classification, actions[0, masks[0]].reshape(-1))
+
+        return ego_loss
+
+    def intrinsic_loss(self, *arg, **kwargs):
         raise NotImplementedError
 
-    def forward(self, x):
-        return self.action_layer(self.initial_network(x))
+    def forward(self, *args, **kwargs):
+        return self.action_layer(self.initial_network(*args, **kwargs))
