@@ -10,6 +10,12 @@ class SoftUpdateModel(AbstractNetwork):
     def forward(self, *args, **kwargs):
         return self.model(*args, **kwargs)
 
+    def pretrain_loss(self, *args, **kwargs):
+        raise RuntimeError('Soft update model should not be trained directly..')
+
+    def intrinsic_loss(self, *arg, **kwargs):
+        raise RuntimeError('Soft update model should not be trained directly.')
+
     def update(self, actor):
         policy_state_dict = actor.state_dict()
         target_state_dict = self.model.state_dict()
