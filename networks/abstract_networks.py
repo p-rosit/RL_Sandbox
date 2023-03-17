@@ -11,15 +11,6 @@ class AbstractNetwork(nn.Module):
     def intrinsic_loss(self, *arg, **kwargs):
         return torch.tensor([0.0], requires_grad=True)
 
-    def action(self, state):
-        raise NotImplementedError
-
-    def value(self, state, action):
-        raise NotImplementedError
-
-    def action_value(self, state):
-        raise NotImplementedError
-
 class AbstractDenseNetwork(AbstractNetwork):
     def __init__(self, input_size, hidden_sizes, output_size):
         super().__init__()
@@ -57,6 +48,8 @@ class AbstractDenseEgoMotionNetwork(AbstractNetwork):
         self.action_layer = nn.Linear(hidden_sizes[-1], output_size)
         self.action_classification_layer = nn.Linear(2 * hidden_sizes[-1], output_size)
         self.softmax = nn.Softmax(dim=1)
+
+        self.loss_function = nn.CrossEntropyLoss()
 
     def pretrain_loss(self, states, actions, rewards, masks):
         intermediate_1 = self.initial_network(states[0, masks[0]])

@@ -7,20 +7,8 @@ class SoftUpdateModel(AbstractNetwork):
         self.model = deepcopy(network)
         self.tau = tau
 
-    def __call__(self, *args, **kwargs):
-        return self.model(*args, **kwargs)
-
     def forward(self, *args, **kwargs):
         return self.model(*args, **kwargs)
-
-    def action(self, state):
-        return self.model.action(state)
-
-    def value(self, state, action):
-        return self.model.value(state, action)
-
-    def action_value(self, state):
-        return self.model.action_value(state)
 
     def update(self, actor):
         policy_state_dict = actor.state_dict()

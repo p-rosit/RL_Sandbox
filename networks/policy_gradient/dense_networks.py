@@ -5,16 +5,23 @@ from networks.abstract_networks import AbstractDenseNetwork, AbstractDenseEgoMot
 
 class DensePolicyNetwork(AbstractDenseNetwork):
 
-    def action(self, state):
-        logits = self.forward(state)
+    def forward(self, state):
+        logits = self.network(state)
         dist = Categorical(logits=logits)
 
         action = dist.sample()
+        return action.view(1, 1), action.item()
 
-        return action.view(1, -1), action.item()
+    def log_prob(self, state, actions):
+        logits = self.network(state)
 
-    def action_value(self, state):
-        raise RuntimeError('Policy network does not estimate value.')
+        log_probs = torch.zeros(logits.size(0), 1)
+        for i, action in enumerate(actions):
+            dist = Categorical(logits=logits[i])
+            log_probs[i] = dist.log_prob(action)
+
+        return log_probs
+
 
 class DenseEgoMotionPolicyNetwork(AbstractDenseEgoMotionNetwork):
     def __init__(self, input_size, hidden_sizes, output_size, alpha_start=100, alpha_end=0.01, alpha_decay=1000):
@@ -23,7 +30,6 @@ class DenseEgoMotionPolicyNetwork(AbstractDenseEgoMotionNetwork):
         self.alpha_start = alpha_start
         self.alpha_end = alpha_end
         self.alpha_decay = alpha_decay
-        self.loss_function = nn.CrossEntropyLoss()
 
     def intrinsic_loss(self, states, log_probs, actions, rewards):
         t = torch.exp(torch.tensor(-1. * self.curr_step / self.alpha_decay, dtype=torch.float64))
@@ -43,13 +49,19 @@ class DenseEgoMotionPolicyNetwork(AbstractDenseEgoMotionNetwork):
 
         return alpha * ego_loss
 
-    def action(self, state):
-        logits = self.forward(state)
+    def forward(self, state):
+        logits = self.action_layer(self.initial_network(state))
         dist = Categorical(logits=logits)
 
         action = dist.sample()
+        return action.view(1, 1), action.item()
 
-        return action.view(-1, 1), action.item()
+    def log_prob(self, state, actions):
+        logits = self.action_layer(self.initial_network(state))
 
-    def action_value(self, state):
-        raise RuntimeError('Policy network does not estimate value.')
+        log_probs = torch.zeros(logits.size(0), 1)
+        for i, action in enumerate(actions):
+            dist = Categorical(logits=logits[i])
+            log_probs[i] = dist.log_prob(action)
+
+        return log_probs

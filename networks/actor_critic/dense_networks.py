@@ -5,9 +5,6 @@ class DenseCriticNetwork(AbstractDenseNetwork):
     def __init__(self, input_size, hidden_sizes):
         super().__init__(input_size, hidden_sizes, 1)
 
-    def value(self, state, _):
-        return self.network(state)
-
 class DenseEgoMotionCriticNetwork(AbstractDenseEgoMotionNetwork):
     def __init__(self, input_size, hidden_sizes):
         super().__init__(input_size, hidden_sizes, 1)
@@ -29,6 +26,3 @@ class DenseEgoMotionCriticNetwork(AbstractDenseEgoMotionNetwork):
             ego_loss += self.loss_function(classification, action[:-1].reshape(-1))
 
         return alpha * ego_loss
-
-    def value(self, state, _):
-        return self.forward(state)
