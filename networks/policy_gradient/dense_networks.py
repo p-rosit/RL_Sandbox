@@ -4,7 +4,7 @@ from networks.abstract_networks import AbstractDenseNetwork, AbstractDenseEgoMot
 
 class DensePolicyNetwork(AbstractDenseNetwork):
 
-    def forward(self, state):
+    def action(self, state):
         logits = self.network(state)
         dist = Categorical(logits=logits)
 
@@ -30,7 +30,7 @@ class DenseEgoMotionPolicyNetwork(AbstractDenseEgoMotionNetwork):
         self.alpha_end = alpha_end
         self.alpha_decay = alpha_decay
 
-    def intrinsic_loss(self, states, log_probs, actions, rewards):
+    def intrinsic_loss(self, states, actions, rewards):
         t = torch.exp(torch.tensor(-1. * self.curr_step / self.alpha_decay, dtype=torch.float64))
         alpha = self.alpha_end + (self.alpha_start - self.alpha_end) * t
         self.curr_step += 1
@@ -48,7 +48,7 @@ class DenseEgoMotionPolicyNetwork(AbstractDenseEgoMotionNetwork):
 
         return alpha * ego_loss
 
-    def forward(self, state):
+    def action(self, state):
         logits = self.action_layer(self.initial_network(state))
         dist = Categorical(logits=logits)
 
