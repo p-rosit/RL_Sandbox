@@ -11,6 +11,15 @@ class AbstractNetwork(nn.Module):
     def intrinsic_loss(self, *arg, **kwargs):
         return torch.tensor([0.0], requires_grad=True)
 
+    def action(self, state):
+        raise NotImplementedError
+
+    def value(self, state, action):
+        raise NotImplementedError
+
+    def action_value(self, state):
+        raise NotImplementedError
+
 class AbstractDenseNetwork(AbstractNetwork):
     def __init__(self, input_size, hidden_sizes, output_size):
         super().__init__()

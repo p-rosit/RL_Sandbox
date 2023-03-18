@@ -14,10 +14,17 @@ class DenseQNetwork(AbstractDenseNetwork):
         env_action = policy_action.item()
         return policy_action, env_action
 
+    def value(self, state, action):
+        action = action.reshape(-1, 1)
+
+        estimated_q_values = self.forward(state)
+        estimated_action_values = estimated_q_values.gather(1, action)
+
+        return estimated_action_values
+
     def action_value(self, state):
         action_value, policy_action = self.forward(state).max(dim=1)
-        env_action = policy_action.item()
-        return action_value, policy_action, env_action
+        return action_value, policy_action
 
 class DenseEgoMotionQNetwork(AbstractDenseEgoMotionNetwork):
     def __init__(self, input_size, hidden_sizes, output_size, alpha_start=1, alpha_end=0, alpha_decay=1000):
@@ -40,7 +47,14 @@ class DenseEgoMotionQNetwork(AbstractDenseEgoMotionNetwork):
         env_action = policy_action.item()
         return policy_action, env_action
 
+    def value(self, state, action):
+        action = action.reshape(-1, 1)
+
+        estimated_q_values = self.forward(state)
+        estimated_action_values = estimated_q_values.gather(1, action)
+
+        return estimated_action_values
+
     def action_value(self, state):
         action_value, policy_action = self.forward(state).max(dim=1)
-        env_action = policy_action.item()
-        return action_value, policy_action, env_action
+        return action_value, policy_action
