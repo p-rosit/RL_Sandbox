@@ -8,6 +8,14 @@ class Discrete2Continuous(AbstractAgent):
         self.remap = remap
         self.reverse_map = {val: ind for ind, val in enumerate(self.remap)}
 
+    def train(self):
+        self.agent.train()
+        super().train()
+
+    def eval(self):
+        self.agent.eval()
+        super().eval()
+
     def sample(self, state):
         return self.remap[self.agent.sample(state)]
 
@@ -37,8 +45,18 @@ class MultiAgent(AbstractAgent):
         if len(self.agents) != len(self.p):
             raise ValueError('Amount of agents and amount of probabilities need to match one to one.')
 
+    def train(self):
+        for agent in self.agents:
+            agent.train()
+        super().train()
+
+    def eval(self):
+        for agent in self.agents:
+            agent.eval()
+        super().eval()
+
     def sample(self, state):
-        ind = torch.randint(len(self.agents))
+        ind = torch.randint(len(self.agents), p=self.p)
         return self.agents[ind].sample(state)
 
     def pretrain_loss(self, *args, **kwargs):
@@ -61,6 +79,14 @@ class AnnealAgent(AbstractAgent):
         self.eps_end = eps_end
 
         self.curr_step = 0
+
+    def train(self):
+        self.agent.train()
+        super().train()
+
+    def eval(self):
+        self.agent.eval()
+        super().eval()
 
     def reset_annealing(self):
         self.curr_step = 0

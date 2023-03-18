@@ -25,9 +25,9 @@ class MultiQLearningAgent(AbstractMultiQlearningAgent):
         with torch.no_grad():
             next_states = states[-1, masks[-1]]
             if self.policy_train:
-                estimated_next_actions = self.policy_networks[ind](next_states).argmax(dim=1)
+                _, estimated_next_actions = self.policy_networks[ind].action_value(next_states)
             else:
-                estimated_next_actions = self.target_networks[ind](next_states).argmax(dim=1)
+                _, estimated_next_actions = self.target_networks[ind].action_value(next_states)
 
             estimated_next_actions = estimated_next_actions.view(1, -1, 1).repeat(len(self.target_networks), 1, 1)
 
@@ -77,16 +77,16 @@ class ClippedMultiQLearningAgent(AbstractMultiQlearningAgent):
 
     def _compute_loss(self, ind, states, actions, rewards, masks):
         discount = torch.pow(self.discount, torch.arange(len(masks) + 1)).reshape(-1, 1)
-        estimated_action_values = self.policy_networks[ind](states[0]).gather(1, actions[0].reshape(-1, 1)).squeeze()
+        estimated_action_values = self.policy_networks[ind].value(states[0], actions[0]).squeeze()
 
         trajectory_reward = (discount[:-1] * rewards).sum(dim=0)
 
         with torch.no_grad():
             next_states = states[-1, masks[-1]]
             if self.policy_train:
-                estimated_next_actions = self.policy_networks[ind](next_states).argmax(dim=1)
+                _, estimated_next_actions = self.policy_networks[ind].action_value(next_states)
             else:
-                estimated_next_actions = self.target_networks[ind](next_states).argmax(dim=1)
+                _, estimated_next_actions = self.target_networks[ind].action_value(next_states)
 
             estimated_next_actions = estimated_next_actions.view(1, -1, 1).repeat(len(self.target_networks), 1, 1)
 

@@ -40,7 +40,7 @@ class AbstractDenseNetwork(AbstractNetwork):
         return self.network(*args, **kwargs)
 
 class AbstractDenseEgoMotionNetwork(AbstractNetwork):
-    def __init__(self, input_size, hidden_sizes, output_size):
+    def __init__(self, input_size, hidden_sizes, output_size, action_size=None):
         super().__init__()
         layer_sizes = (input_size, *hidden_sizes)
 
@@ -55,8 +55,13 @@ class AbstractDenseEgoMotionNetwork(AbstractNetwork):
         self.initial_network = nn.Sequential(*initial_layers)
         self.future_network = nn.Sequential(*future_layers)
         self.action_layer = nn.Linear(hidden_sizes[-1], output_size)
-        self.action_classification_layer = nn.Linear(2 * hidden_sizes[-1], output_size)
+
+        if action_size is None:
+            action_size = output_size
+        self.action_classification_layer = nn.Linear(2 * hidden_sizes[-1], action_size)
         self.softmax = nn.Softmax(dim=1)
+
+        self.loss_function = nn.CrossEntropyLoss()
 
     def pretrain_loss(self, states, actions, rewards, masks):
         intermediate_1 = self.initial_network(states[0, masks[0]])
@@ -66,7 +71,7 @@ class AbstractDenseEgoMotionNetwork(AbstractNetwork):
         logits = self.action_classification_layer(intermediate)
         classification = self.softmax(logits)
 
-        ego_loss = self.loss_function(classification, actions[0, masks[0]].reshape(-1))
+        ego_loss = self.loss_function(classification, actions[0, masks[0]])
 
         return ego_loss
 

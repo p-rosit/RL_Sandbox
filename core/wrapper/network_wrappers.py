@@ -7,9 +7,6 @@ class SoftUpdateModel(AbstractNetwork):
         self.model = deepcopy(network)
         self.tau = tau
 
-    def __call__(self, *args, **kwargs):
-        return self.model(*args, **kwargs)
-
     def forward(self, *args, **kwargs):
         return self.model(*args, **kwargs)
 
@@ -21,6 +18,12 @@ class SoftUpdateModel(AbstractNetwork):
 
     def action_value(self, state):
         return self.model.action_value(state)
+
+    def pretrain_loss(self, *args, **kwargs):
+        raise RuntimeError('Soft update model should not be trained directly..')
+
+    def intrinsic_loss(self, *arg, **kwargs):
+        raise RuntimeError('Soft update model should not be trained directly.')
 
     def update(self, actor):
         policy_state_dict = actor.state_dict()

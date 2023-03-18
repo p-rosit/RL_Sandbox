@@ -10,13 +10,13 @@ class QLearningAgent(AbstractQLearningAgent):
 
     def _compute_loss(self, states, actions, rewards, masks):
         discount = torch.pow(self.discount, torch.arange(len(masks) + 1)).reshape(-1, 1)
-        estimated_action_values = self.policy_network(states[0]).gather(1, actions[0].reshape(-1, 1)).squeeze()
+        estimated_action_values = self.policy_network.value(states[0], actions[0]).squeeze()
 
         trajectory_reward = (discount[:-1] * rewards).sum(dim=0)
 
         with torch.no_grad():
             next_states = states[-1, masks[-1]]
-            estimated_next_action_values, _ = self.target_network(next_states).max(dim=1)
+            estimated_next_action_values, _ = self.target_network.action_value(next_states)
         bellman_action_values = trajectory_reward.clone()
         bellman_action_values[masks[-1]] += discount[-1] * estimated_next_action_values
 

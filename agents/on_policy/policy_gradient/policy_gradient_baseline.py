@@ -3,7 +3,7 @@ from core.agents.abstract_policy_gradient_agent import AbstractPolicyGradientAge
 
 class ReinforceAdvantageAgent(AbstractPolicyGradientAgent):
 
-    def _compute_loss(self, states, log_probs, actions, rewards):
+    def _compute_loss(self, states, actions, rewards):
         extrinsic_loss = torch.zeros(1)
 
         max_trajectory = max(reward.size(0) for reward in rewards)
@@ -30,14 +30,14 @@ class ReinforceAdvantageAgent(AbstractPolicyGradientAgent):
 
         value_estimate /= trajectory_amount
 
-        for episode_log_probs, episode_trajectory_rewards in zip(log_probs, trajectory_rewards):
-            size = episode_log_probs.size(0)
+        for episode_states, episode_actions, episode_trajectory_rewards in zip(states, actions, trajectory_rewards):
+            size = episode_states.size(0)
 
-            policy_function = (episode_trajectory_rewards - value_estimate[:size]) * episode_log_probs
+            policy_function = (episode_trajectory_rewards - value_estimate[:size]) * self.policy_network.log_prob(episode_states, episode_actions)
             extrinsic_loss -= policy_function.sum()
 
-        extrinsic_loss /= len(log_probs)
-        intrinsic_loss = self.policy_network.intrinsic_loss(states, log_probs, actions, rewards)
+        extrinsic_loss /= len(states)
+        intrinsic_loss = self.policy_network.intrinsic_loss(states, actions, rewards)
 
         return extrinsic_loss + intrinsic_loss
 
@@ -46,7 +46,7 @@ class ModifiedReinforceAdvantageAgent(AbstractPolicyGradientAgent):
         super().__init__(network, discount=discount)
         self.truncate_grad_trajectory = truncate_grad_trajectory
 
-    def _compute_loss(self, states, log_probs, actions, rewards):
+    def _compute_loss(self, states, actions, rewards):
         max_trajectory = max(reward.size(0) for reward in rewards)
         total_grads = min(max_trajectory, self.truncate_grad_trajectory)
         extrinsic_loss = torch.zeros(total_grads)
@@ -75,14 +75,14 @@ class ModifiedReinforceAdvantageAgent(AbstractPolicyGradientAgent):
 
         value_estimate /= trajectory_amount
 
-        for episode_log_probs, episode_trajectory_rewards in zip(log_probs, trajectory_rewards):
-            size = episode_log_probs.size(0)
+        for episode_states, episode_actions, episode_trajectory_rewards in zip(states, actions, trajectory_rewards):
+            size = episode_states.size(0)
 
             size_grad_trajectory = min(size, self.truncate_grad_trajectory)
             step_discounts = all_step_discounts[:, :size]
             step_discounts = step_discounts[:size_grad_trajectory]
 
-            policy_function = (episode_trajectory_rewards - value_estimate[:size]) * episode_log_probs
+            policy_function = (episode_trajectory_rewards - value_estimate[:size]) * self.policy_network.log_prob(episode_states, episode_actions)
 
             extrinsic_loss[:size_grad_trajectory] -= (
                 (torch.mm(step_discounts, policy_function))
@@ -90,6 +90,6 @@ class ModifiedReinforceAdvantageAgent(AbstractPolicyGradientAgent):
             samples_of_grad[:size_grad_trajectory] += 1
 
         extrinsic_loss = (extrinsic_loss / samples_of_grad).sum()
-        intrinsic_loss = self.policy_network.intrinsic_loss(states, log_probs, actions, rewards)
+        intrinsic_loss = self.policy_network.intrinsic_loss(states, actions, rewards)
 
         return extrinsic_loss + intrinsic_loss
