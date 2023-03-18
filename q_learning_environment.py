@@ -4,7 +4,7 @@ import gymnasium as gym
 from buffer.experience_replay_buffer import ReplayBuffer
 from environment.q_learning_environment import QLearningEnvironment
 
-from networks.q_learning.dense_networks import DenseQNetwork, DenseEgoMotionQNetwork
+from networks.q_learning.dense_networks import DenseQNetwork, DenseEgoMotionQNetwork, DenseDuelingQNetwork
 
 from agents.random_agent import RandomAgent
 from agents.off_policy.deep_q_learning.q_learning import QLearningAgent
@@ -44,11 +44,16 @@ def main():
     # net_3 = DenseQNetwork(input_size, hidden_sizes, output_size)
     # net_4 = DenseQNetwork(input_size, hidden_sizes, output_size)
 
-    alpha_start = 0
-    net_1 = DenseEgoMotionQNetwork(input_size, hidden_sizes, output_size, alpha_start=alpha_start)
-    net_2 = DenseEgoMotionQNetwork(input_size, hidden_sizes, output_size, alpha_start=alpha_start)
-    net_3 = DenseEgoMotionQNetwork(input_size, hidden_sizes, output_size, alpha_start=alpha_start)
-    net_4 = DenseEgoMotionQNetwork(input_size, hidden_sizes, output_size, alpha_start=alpha_start)
+    # alpha_start = 0
+    # net_1 = DenseEgoMotionQNetwork(input_size, hidden_sizes, output_size, alpha_start=alpha_start)
+    # net_2 = DenseEgoMotionQNetwork(input_size, hidden_sizes, output_size, alpha_start=alpha_start)
+    # net_3 = DenseEgoMotionQNetwork(input_size, hidden_sizes, output_size, alpha_start=alpha_start)
+    # net_4 = DenseEgoMotionQNetwork(input_size, hidden_sizes, output_size, alpha_start=alpha_start)
+
+    net_1 = DenseDuelingQNetwork(input_size, hidden_sizes, output_size)
+    net_2 = DenseDuelingQNetwork(input_size, hidden_sizes, output_size)
+    net_3 = DenseDuelingQNetwork(input_size, hidden_sizes, output_size)
+    net_4 = DenseDuelingQNetwork(input_size, hidden_sizes, output_size)
 
     # q = QLearningAgent(net_1, discount=gamma, tau=tau)
     # q = DoubleQLearningAgent(net_1, net_2, discount=gamma, tau=tau, policy_train=False)
