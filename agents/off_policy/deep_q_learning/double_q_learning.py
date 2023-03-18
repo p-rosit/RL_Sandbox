@@ -27,10 +27,8 @@ class DoubleQLearningAgent(AbstractDoubleQLearningAgent):
 
         with torch.no_grad():
             next_states = states[-1, masks[-1]]
-            estimated_next_actions = action_network(next_states).argmax(dim=1).view(-1, 1)
-            estimated_next_values = target_network(next_states)
-
-            estimated_next_action_values = estimated_next_values.gather(1, estimated_next_actions).squeeze()
+            _, estimated_next_actions = action_network.action_value(next_states)
+            estimated_next_action_values = target_network.value(next_states, estimated_next_actions).squeeze()
 
         bellman_action_values = trajectory_reward.clone()
         bellman_action_values[masks[-1]] += discount[-1] * estimated_next_action_values
@@ -48,24 +46,22 @@ class ModifiedDoubleQLearningAgent(AbstractQLearningAgent):
         self.policy_network = policy_network
         self.target_network = SoftUpdateModel(policy_network, tau=tau)
 
-    def _compute_loss(self, policy_network, target_network, states, actions, rewards, masks):
+    def _compute_loss(self, states, actions, rewards, masks):
         discount = torch.pow(self.discount, torch.arange(len(masks) + 1)).reshape(-1, 1)
-        estimated_action_values = policy_network(states[0]).gather(1, actions[0].reshape(-1, 1)).squeeze()
+        estimated_action_values = self.policy_network.value(states[0], actions[0]).squeeze()
 
         trajectory_reward = (discount[:-1] * rewards).sum(dim=0)
 
         with torch.no_grad():
             next_states = states[-1, masks[-1]]
-            estimated_next_actions = policy_network(next_states).argmax(dim=1).view(-1, 1)
-            estimated_next_values = target_network(next_states)
-
-            estimated_next_action_values = estimated_next_values.gather(1, estimated_next_actions).squeeze()
+            _, estimated_next_actions = self.policy_network.action_value(next_states)
+            estimated_next_action_values = self.target_network.value(next_states, estimated_next_actions).squeeze()
 
         bellman_action_values = trajectory_reward.clone()
         bellman_action_values[masks[-1]] += discount[-1] * estimated_next_action_values
 
         extrinsic_loss = self.criterion(estimated_action_values, bellman_action_values)
-        intrinsic_loss = policy_network.intrinsic_loss(states, actions, rewards, masks)
+        intrinsic_loss = self.policy_network.intrinsic_loss(states, actions, rewards, masks)
 
         td_error = torch.abs(bellman_action_values - estimated_action_values).detach()
 
@@ -84,7 +80,7 @@ class ClippedDoubleQLearning(AbstractDoubleQLearningAgent):
 
     def _compute_loss(self, ind, states, actions, rewards, masks):
         policy_network = self.policy_network_1 if ind == 0 else self.policy_network_2
-        estimated_action_values = policy_network(states[0]).gather(1, actions[0].reshape(-1, 1)).squeeze()
+        estimated_action_values = policy_network.value(states[0], actions[0]).squeeze()
 
         extrinsic_loss = self.criterion(estimated_action_values, self.bellman_action_values)
         intrinsic_loss = policy_network.intrinsic_loss(states, actions, rewards, masks)
@@ -99,8 +95,8 @@ class ClippedDoubleQLearning(AbstractDoubleQLearningAgent):
 
         with torch.no_grad():
             next_states = states[-1, masks[-1]]
-            estimated_next_values_1, _ = self.target_network_1(next_states).max(dim=1)
-            estimated_next_values_2, _ = self.target_network_2(next_states).max(dim=1)
+            estimated_next_values_1, _ = self.target_network_1.action_value(next_states)
+            estimated_next_values_2, _ = self.target_network_2.action_value(next_states)
             estimated_next_action_values = torch.min(estimated_next_values_1, estimated_next_values_2)
         self.bellman_action_values = trajectory_reward.clone()
         self.bellman_action_values[masks[-1]] += discount[-1] * estimated_next_action_values

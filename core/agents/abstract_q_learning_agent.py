@@ -77,14 +77,14 @@ class AbstractDoubleQLearningAgent(AbstractAgent):
             else:
                 policy_action, env_action = self.policy_network_2.action(state)
         else:
-            value_1, action_1, env_action_1 = self.policy_network_1.action_value(state)
-            value_2, action_2, env_action_2 = self.policy_network_2.action_value(state)
+            value_1, action_1 = self.policy_network_1.action_value(state)
+            value_2, action_2 = self.policy_network_2.action_value(state)
             if value_1 > value_2:
                 policy_action = action_1
-                env_action = env_action_1
+                env_action = action_1.item()
             else:
                 policy_action = action_2
-                env_action = env_action_2
+                env_action = action_1.item()
 
         return policy_action.view(-1, 1), env_action
 
@@ -141,10 +141,10 @@ class AbstractMultiQlearningAgent(AbstractAgent):
             policy_action, env_action = self.policy_networks[ind].action(state)
         else:
             # fix vectorization
-            actions = [policy_network.get_action_value(state) for policy_network in self.policy_networks]
-            _, policy_action, env_action = max(actions, key=lambda x: x[0])
+            actions = [policy_network.action_value(state) for policy_network in self.policy_networks]
+            _, policy_action = max(actions, key=lambda x: x[0])
 
-        return policy_action.view(-1, 1), env_action
+        return policy_action.view(-1, 1), policy_action.item()
 
     def parameters(self):
         for policy_network in self.policy_networks:
