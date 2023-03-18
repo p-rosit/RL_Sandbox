@@ -42,7 +42,7 @@ class PolicyGradientEnvironment:
             plt.plot(history)
             plt.show()
 
-    def train(self, agent, optimizer, num_rollouts, train_steps=1, episodes_per_step=1, eval_episodes=0, plot=False):
+    def train(self, agent, optimizer, num_rollouts, train_steps=1, episodes_per_rollout=1, eval_episodes=0, plot=False):
         episode_reward = []
         evaluation_episode = []
         evaluation_reward = []
@@ -57,7 +57,7 @@ class PolicyGradientEnvironment:
                 agent.train()
 
             curr_reward = 0
-            for _ in range(episodes_per_step):
+            for _ in range(episodes_per_rollout):
                 done = False
                 state, info = self.env.reset()
                 state = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
@@ -85,7 +85,7 @@ class PolicyGradientEnvironment:
                 optimizer.step()
             self.buffer.clear()
 
-            episode_reward.append(curr_reward / episodes_per_step)
+            episode_reward.append(curr_reward / episodes_per_rollout)
 
             if plot:
                 ax.cla()

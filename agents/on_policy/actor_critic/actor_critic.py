@@ -36,7 +36,7 @@ class ActorCriticAgent(AbstractActorCriticAgent):
             extrinsic_loss -= (episode_advantages * episode_log_probs).sum()
 
         extrinsic_loss /= len(states)
-        # intrinsic_loss == self.actor.intrinsic_loss(states, actions, rewards)
-        # intrinsic_loss += self.critic.intrinsic_loss(states, actions, rewards)
+        intrinsic_loss += self.actor.intrinsic_loss(states, actions, rewards)
+        intrinsic_loss += self.critic.intrinsic_loss(states, actions, rewards)
 
         return extrinsic_loss + intrinsic_loss

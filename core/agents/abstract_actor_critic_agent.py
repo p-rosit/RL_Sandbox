@@ -22,7 +22,7 @@ class AbstractActorCriticAgent(AbstractAgent):
         super().eval()
 
     def sample(self, state):
-        policy_action, env_action = self.actor(state)
+        policy_action, env_action = self.actor.action(state)
         return policy_action.view(-1, 1), env_action
 
     def parameters(self):
