@@ -71,7 +71,7 @@ class AbstractDenseEgoMotionNetwork(AbstractNetwork):
         logits = self.action_classification_layer(intermediate)
         classification = self.softmax(logits)
 
-        ego_loss = self.loss_function(classification, actions[0, masks[0]])
+        ego_loss = self.loss_function(classification, actions[0, masks[0]].reshape(-1))
 
         return ego_loss
 

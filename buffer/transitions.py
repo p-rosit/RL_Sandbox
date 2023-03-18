@@ -1,38 +1,29 @@
 from collections import namedtuple
 import torch
+import torch.nn.functional as nnf
 
 Experience = namedtuple('Experience', ('state', 'action', 'reward'))
 
 def batch_trajectories(experiences):
     batch_experiences = Experience(*zip(*experiences))
-    states = []
-    actions = []
-    rewards = []
+
+    states, actions, rewards = batch_experiences
+    max_trajectory = max(ac.size(0) for ac in actions)
+
     masks = []
+    for state in states:
+        mask = torch.zeros((max_trajectory, 1), dtype=torch.bool)
+        mask[:state.size(0)-1] = True
+        masks.append(mask)
 
-    state, action, reward = batch_experiences
-    max_trajectory = max(len(ac) for ac in action)
+    states = [nnf.pad(state, (0, 0, 0, max_trajectory + 1 - state.size(0))).unsqueeze(0) for state in states]
+    actions = [nnf.pad(action, (0, 0, 0, max_trajectory - action.size(0))).unsqueeze(0) for action in actions]
+    rewards = [nnf.pad(reward, (0, max_trajectory - reward.size(0))).unsqueeze(1) for reward in rewards]
 
-    for i in range(max_trajectory + 1):
-        states.append(torch.cat(
-            [st[i] if len(st) > i else torch.zeros_like(st[0]) for st in state]
-        ).unsqueeze(0))
-
-    for i in range(max_trajectory):
-        actions.append(torch.cat(
-            [ac[i] if len(ac) > i else torch.zeros_like(ac[0]) for ac in action]
-        ).reshape(1, -1))
-        rewards.append(torch.cat(
-            [rw[i] if len(rw) > i else torch.tensor([0.0]) for rw in reward]
-        ).reshape(1, -1))
-        masks.append(torch.tensor(
-            [len(st) > i + 1 for st in state], dtype=torch.bool
-        ).reshape(1, -1))
-
-    states = torch.cat(states, dim=0)
-    actions = torch.cat(actions, dim=0)
-    rewards = torch.cat(rewards, dim=0)
-    masks = torch.cat(masks, dim=0)
+    states = torch.cat(states, dim=0).swapaxes(0, 1)
+    actions = torch.cat(actions, dim=0).swapaxes(0, 1)
+    rewards = torch.cat(rewards, dim=1)
+    masks = torch.cat(masks, dim=1)
 
     return states, actions, rewards, masks
 
@@ -42,8 +33,8 @@ def batch_episodes(experiences):
     rewards = []
 
     for state, action, reward in experiences:
-        states.append(torch.cat(state, dim=0))
-        actions.append(torch.cat(action, dim=0))
-        rewards.append(torch.cat(reward, dim=0))
+        states.append(state)
+        actions.append(action)
+        rewards.append(reward)
 
     return states, actions, rewards

@@ -1,11 +1,12 @@
 import numpy as np
+import torch
 from buffer.transitions import Experience
 from buffer.abstract_buffer import AbstractBuffer
 
 rng = np.random.default_rng()
 
 class ReplayBuffer(AbstractBuffer):
-    def __init__(self, max_size=100, default_prob=100):
+    def __init__(self, max_size=100, default_prob=10.0):
         super().__init__(max_size=max_size)
         self.ind = 0
         self.buffer = []
@@ -18,14 +19,14 @@ class ReplayBuffer(AbstractBuffer):
         self.episode = []
 
     def __len__(self):
-        return sum(len(episode) for episode in self.buffer)
+        return sum(episode.state.size(0) for episode in self.buffer)
 
     def normalize(self):
-        episode_sum = [sum(episode) for episode in self.weights]
+        episode_sum = [episode.sum() for episode in self.weights]
         total_sum = sum(episode_sum)
 
         episode_weights = [weight / total_sum for weight in episode_sum]
-        normalized_weights = [[weight / ep_sum for weight in episode] for ep_sum, episode in zip(episode_sum, self.weights)]
+        normalized_weights = [episode / ep_sum for ep_sum, episode in zip(episode_sum, self.weights)]
         return episode_weights, normalized_weights
 
     def append(self, state, action, reward, episode_terminated=False):
@@ -33,8 +34,14 @@ class ReplayBuffer(AbstractBuffer):
         self.episode.append(experience)
 
         if episode_terminated:
-            self.buffer.append(self.episode)
-            self.weights.append([self.default_prob for _ in self.episode])
+            states, actions, rewards = zip(*self.episode)
+            states = torch.cat(states, dim=0)
+            actions = torch.cat(actions, dim=0)
+            rewards = torch.cat(rewards, dim=0)
+            episode = Experience(states, actions, rewards)
+
+            self.buffer.append(episode)
+            self.weights.append(np.full(len(self.episode), self.default_prob))
 
             self.episode = []
             while len(self) > self.max_size and len(self.buffer) > 1:
@@ -49,30 +56,29 @@ class ReplayBuffer(AbstractBuffer):
 
         trajectories = []
         for episode_ind in self.episode_inds:
-            ind = rng.choice(len(self.buffer[episode_ind]), p=normalized_weights[episode_ind])
+            episode = self.buffer[episode_ind]
+            ind = rng.choice(episode.state.size(0), p=normalized_weights[episode_ind])
             self.inds.append(ind)
 
-            experiences = self.buffer[episode_ind][ind:min(len(self.buffer[episode_ind]), ind+trajectory_length)]
-            states, actions, rewards = zip(*experiences)
+            episode_states, episode_actions, episode_rewards = episode
 
-            if len(self.buffer[episode_ind]) > ind + trajectory_length:
-                states = (*states, self.buffer[episode_ind][ind + trajectory_length].state)
+            if episode_states.size(0) > ind + trajectory_length:
+                states = episode_states[ind:(ind+trajectory_length+1)]
+            else:
+                states = episode_states[ind:(ind+trajectory_length)]
+            actions = episode_actions[ind:min(episode_actions.size(0), ind+trajectory_length)]
+            rewards = episode_rewards[ind:min(episode_rewards.size(0), ind+trajectory_length)]
 
             trajectories.append(Experience(states, actions, rewards))
 
         return trajectories
 
     def update(self, sample_errors):
-        for episode_ind, ind, sample_error in zip(self.episode_inds, self.inds, sample_errors):
-            self.weights[episode_ind][ind] = sample_error.item()
+        for i, (episode_ind, ind) in enumerate(zip(self.episode_inds, self.inds)):
+            self.weights[episode_ind][ind] = sample_errors[i]
 
     def all_episodes(self):
-        episodes = []
-        for episode in self.buffer:
-            states, actions, rewards = zip(*episode)
-            episodes.append(Experience(states, actions, rewards))
-
-        return episodes
+        return self.buffer
 
     def clear(self):
         self.buffer = []
