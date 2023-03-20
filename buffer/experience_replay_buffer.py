@@ -1,5 +1,5 @@
 import numpy as np
-import torch
+# import torch
 from buffer.transitions import Experience
 from buffer.abstract_buffer import AbstractBuffer
 
@@ -19,7 +19,7 @@ class ReplayBuffer(AbstractBuffer):
         self.episode = []
 
     def __len__(self):
-        return sum(episode.state.size(0) for episode in self.buffer)
+        return sum(episode.state.shape[0] for episode in self.buffer)
 
     def normalize(self):
         episode_sum = [episode.sum() for episode in self.weights]
@@ -30,14 +30,14 @@ class ReplayBuffer(AbstractBuffer):
         return episode_weights, normalized_weights
 
     def append(self, state, action, reward, episode_terminated=False):
-        experience = Experience(state, action, reward)
+        experience = Experience(state.numpy(), action.numpy(), reward.numpy())
         self.episode.append(experience)
 
         if episode_terminated:
             states, actions, rewards = zip(*self.episode)
-            states = torch.cat(states, dim=0)
-            actions = torch.cat(actions, dim=0)
-            rewards = torch.cat(rewards, dim=0)
+            states = np.concatenate(states, axis=0)
+            actions = np.concatenate(actions, axis=0)
+            rewards = np.concatenate(rewards, axis=0)
             episode = Experience(states, actions, rewards)
 
             self.buffer.append(episode)
@@ -57,17 +57,17 @@ class ReplayBuffer(AbstractBuffer):
         trajectories = []
         for episode_ind in self.episode_inds:
             episode = self.buffer[episode_ind]
-            ind = rng.choice(episode.state.size(0), p=normalized_weights[episode_ind])
+            ind = rng.choice(episode.state.shape[0], p=normalized_weights[episode_ind])
             self.inds.append(ind)
 
             episode_states, episode_actions, episode_rewards = episode
 
-            if episode_states.size(0) > ind + trajectory_length:
+            if episode_states.shape[0] > ind + trajectory_length:
                 states = episode_states[ind:(ind+trajectory_length+1)]
             else:
                 states = episode_states[ind:(ind+trajectory_length)]
-            actions = episode_actions[ind:min(episode_actions.size(0), ind+trajectory_length)]
-            rewards = episode_rewards[ind:min(episode_rewards.size(0), ind+trajectory_length)]
+            actions = episode_actions[ind:min(episode_actions.shape[0], ind+trajectory_length)]
+            rewards = episode_rewards[ind:min(episode_rewards.shape[0], ind+trajectory_length)]
 
             trajectories.append(Experience(states, actions, rewards))
 

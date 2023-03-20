@@ -1,29 +1,32 @@
 from collections import namedtuple
 import torch
-import torch.nn.functional as nnf
+import numpy as np
 
 Experience = namedtuple('Experience', ('state', 'action', 'reward'))
 
 def batch_trajectories(experiences):
     batch_experiences = Experience(*zip(*experiences))
 
-    states, actions, rewards = batch_experiences
-    max_trajectory = max(ac.size(0) for ac in actions)
+    state, action, reward = batch_experiences
+    max_trajectory = max(ac.shape[0] for ac in action)
 
-    masks = []
-    for state in states:
-        mask = torch.zeros((max_trajectory, 1), dtype=torch.bool)
-        mask[:state.size(0)-1] = True
-        masks.append(mask)
+    masks = np.zeros((max_trajectory, len(state)), dtype=bool)
+    states = np.zeros((max_trajectory + 1, len(state), state[0].shape[-1]), dtype=state[0].dtype)
+    actions = np.zeros((max_trajectory, len(action), 1), dtype=action[0].dtype)
+    rewards = np.zeros((max_trajectory, len(reward)), dtype=reward[0].dtype)
 
-    states = [nnf.pad(state, (0, 0, 0, max_trajectory + 1 - state.size(0))).unsqueeze(0) for state in states]
-    actions = [nnf.pad(action, (0, 0, 0, max_trajectory - action.size(0))).unsqueeze(0) for action in actions]
-    rewards = [nnf.pad(reward, (0, max_trajectory - reward.size(0))).unsqueeze(1) for reward in rewards]
+    for i, st in enumerate(state):
+        states[:st.shape[0], i] = st
+        masks[:st.shape[0]-1, i] = True
 
-    states = torch.cat(states, dim=0).swapaxes(0, 1)
-    actions = torch.cat(actions, dim=0).swapaxes(0, 1)
-    rewards = torch.cat(rewards, dim=1)
-    masks = torch.cat(masks, dim=1)
+    for i, (ac, rw) in enumerate(zip(action, reward)):
+        actions[:ac.shape[0], i] = ac
+        rewards[:rw.shape[0], i] = rw
+
+    states = torch.from_numpy(states)
+    actions = torch.from_numpy(actions)
+    rewards = torch.from_numpy(rewards)
+    masks = torch.from_numpy(masks)
 
     return states, actions, rewards, masks
 
@@ -33,8 +36,8 @@ def batch_episodes(experiences):
     rewards = []
 
     for state, action, reward in experiences:
-        states.append(state)
-        actions.append(action)
-        rewards.append(reward)
+        states.append(torch.from_numpy(state))
+        actions.append(torch.from_numpy(action))
+        rewards.append(torch.from_numpy(reward))
 
     return states, actions, rewards

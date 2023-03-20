@@ -39,10 +39,10 @@ def main():
     epochs = 1000
     pre_batch = 1000
 
-    # net_1 = DenseQNetwork(input_size, hidden_sizes, output_size)
-    # net_2 = DenseQNetwork(input_size, hidden_sizes, output_size)
-    # net_3 = DenseQNetwork(input_size, hidden_sizes, output_size)
-    # net_4 = DenseQNetwork(input_size, hidden_sizes, output_size)
+    net_1 = DenseQNetwork(input_size, hidden_sizes, output_size)
+    net_2 = DenseQNetwork(input_size, hidden_sizes, output_size)
+    net_3 = DenseQNetwork(input_size, hidden_sizes, output_size)
+    net_4 = DenseQNetwork(input_size, hidden_sizes, output_size)
 
     # alpha_start = 0
     # net_1 = DenseEgoMotionQNetwork(input_size, hidden_sizes, output_size, alpha_start=alpha_start)
@@ -50,10 +50,10 @@ def main():
     # net_3 = DenseEgoMotionQNetwork(input_size, hidden_sizes, output_size, alpha_start=alpha_start)
     # net_4 = DenseEgoMotionQNetwork(input_size, hidden_sizes, output_size, alpha_start=alpha_start)
 
-    net_1 = DenseDuelingQNetwork(input_size, hidden_sizes, output_size)
-    net_2 = DenseDuelingQNetwork(input_size, hidden_sizes, output_size)
-    net_3 = DenseDuelingQNetwork(input_size, hidden_sizes, output_size)
-    net_4 = DenseDuelingQNetwork(input_size, hidden_sizes, output_size)
+    # net_1 = DenseDuelingQNetwork(input_size, hidden_sizes, output_size)
+    # net_2 = DenseDuelingQNetwork(input_size, hidden_sizes, output_size)
+    # net_3 = DenseDuelingQNetwork(input_size, hidden_sizes, output_size)
+    # net_4 = DenseDuelingQNetwork(input_size, hidden_sizes, output_size)
 
     # q = QLearningAgent(net_1, discount=gamma, tau=tau)
     # q = DoubleQLearningAgent(net_1, net_2, discount=gamma, tau=tau, policy_train=False)
