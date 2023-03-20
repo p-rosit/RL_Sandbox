@@ -1,3 +1,4 @@
+import torch
 from torch import nn
 from core.agents.abstract_agent import AbstractAgent
 from core.wrapper.network_wrappers import SoftUpdateModel
@@ -48,11 +49,18 @@ class AbstractSoftActorCritic(AbstractAgent):
         batch_experiences = batch_trajectories(experiences)
         return self._pretrain_loss(*batch_experiences)
 
-    def _compute_loss(self, states, actions, rewards, trajectory_length):
+    def _compute_actor_loss(self, states, actions, rewards, trajectory_length):
+        raise NotImplementedError
+
+    def _compute_critic_loss(self, ind, states, actions, rewards, trajectory_length):
         raise NotImplementedError
 
     def _loss(self, states, actions, rewards, trajectory_length):
-        return self._compute_loss(states, actions, rewards, trajectory_length)
+        loss = torch.zeros(1)
+        loss += self._compute_actor_loss(states, actions, rewards, trajectory_length)
+        loss += self._compute_critic_loss(0, states, actions, rewards, trajectory_length)
+        loss += self._compute_critic_loss(1, states, actions, rewards, trajectory_length)
+        return loss
 
     def loss(self, experiences, trajectory_length=1):
         states, actions, rewards = batch_episodes(experiences)
