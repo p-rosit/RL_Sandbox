@@ -5,10 +5,19 @@ class AbstractBuffer:
     def __len__(self):
         raise NotImplementedError
 
-    def append(self, *args, **kwargs):
+    def _normalize_weights(self):
         raise NotImplementedError
 
-    def sample(self, **kwargs):
+    def update_weights(self, sample_errors):
+        raise NotImplementedError
+
+    def append(self, state, action, reward, episode_terminated=False):
+        raise NotImplementedError
+
+    def sample(self, batch_size=1, trajectory_length=1):
+        raise NotImplementedError
+
+    def all_episodes(self):
         raise NotImplementedError
 
     def clear(self):

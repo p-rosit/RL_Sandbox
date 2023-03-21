@@ -79,7 +79,7 @@ class QLearningEnvironment:
                 if len(self.buffer) > batch_size:
                     for _ in range(train_steps):
                         loss, td_error = agent.loss(self.buffer.sample(batch_size=batch_size, trajectory_length=td_steps))
-                        self.buffer.update(td_error)
+                        self.buffer.update_weights(td_error)
                         optimizer.zero_grad()
                         loss.backward()
                         torch.nn.utils.clip_grad_value_(agent.parameters(), 100)

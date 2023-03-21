@@ -2,7 +2,7 @@ import torch
 from torch import optim
 import gymnasium as gym
 
-from buffer.experience_replay_buffer import ReplayBuffer
+from buffer.experience_replay_buffer import PrioritizedExperienceReplayBuffer
 from environment.policy_gradient_environment import PolicyGradientEnvironment
 
 from networks.policy_gradient.dense_networks import DensePolicyNetwork, DenseEgoMotionPolicyNetwork
@@ -14,7 +14,7 @@ def main():
     # env = gym.make("LunarLander-v2", render_mode="human")
     # env = gym.make("LunarLander-v2")
     env = gym.make("CartPole-v1")
-    buffer = ReplayBuffer(max_size=torch.inf)
+    buffer = PrioritizedExperienceReplayBuffer(max_size=torch.inf)
     environment = PolicyGradientEnvironment(env, buffer)
 
     input_size = 4
