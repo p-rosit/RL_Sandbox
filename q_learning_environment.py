@@ -1,7 +1,7 @@
 from torch import optim
 import gymnasium as gym
 
-from buffer.experience_replay_buffer import PrioritizedExperienceReplayBuffer
+from buffer.experience_replay_buffer import PrioritizedExperienceReplayBuffer, ReplayBuffer
 from environment.q_learning_environment import QLearningEnvironment
 
 from networks.q_learning.dense_networks import DenseQNetwork, DenseEgoMotionQNetwork, DenseDuelingQNetwork
@@ -16,7 +16,8 @@ def main():
     # env = gym.make("LunarLander-v2", render_mode="human")
     # env = gym.make("LunarLander-v2")
     env = gym.make("CartPole-v1")
-    buffer = PrioritizedExperienceReplayBuffer(max_size=50000)
+    # buffer = PrioritizedExperienceReplayBuffer(max_size=50000)
+    buffer = ReplayBuffer(max_size=50000)
     environment = QLearningEnvironment(env, buffer)
 
     input_size = 4
