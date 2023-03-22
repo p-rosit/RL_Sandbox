@@ -36,6 +36,11 @@ class PrioritizedExperienceReplayBuffer(AbstractBuffer):
         self.episode.append(experience)
 
         if episode_terminated:
+            self.episode.append(Experience(
+                np.zeros_like(experience.state),
+                np.zeros_like(experience.action),
+                np.zeros_like(experience.reward)
+            ))
             states, actions, rewards = zip(*self.episode)
             states = np.concatenate(states, axis=0)
             actions = np.concatenate(actions, axis=0)
@@ -43,7 +48,7 @@ class PrioritizedExperienceReplayBuffer(AbstractBuffer):
             episode = Experience(states, actions, rewards)
 
             self.buffer.append(episode)
-            self.weights.append(np.full(len(self.episode), self.default_prob))
+            self.weights.append(np.full(len(self.episode) - 1, self.default_prob))
 
             self.episode = []
             while len(self) > self.max_size and len(self.buffer) > 1:
@@ -54,13 +59,27 @@ class PrioritizedExperienceReplayBuffer(AbstractBuffer):
         episode_weights, normalized_weights = self._normalize_weights()
 
         self.episode_inds = rng.choice(len(self.buffer), batch_size, p=episode_weights)
+        self.sample_amount = []
+        for i in range(len(self.buffer)):
+            self.sample_amount.append((self.episode_inds == i).sum())
         self.inds = []
 
         trajectories = []
-        for episode_ind in self.episode_inds:
+        for episode_ind, episode_sample_amount in enumerate(self.sample_amount):
             episode = self.buffer[episode_ind]
-            ind = rng.choice(episode.state.shape[0], p=normalized_weights[episode_ind])
+            ind = rng.choice(episode.state.shape[0] - 1, episode_sample_amount, p=normalized_weights[episode_ind])
             self.inds.append(ind)
+
+            print(ind)
+            print(ind + trajectory_length)
+
+            indices = np.arange(ind, ind + trajectory_length)
+
+            print(indices)
+
+            # print(episode)
+            # print(ind)
+            error(':)')
 
             episode_states, episode_actions, episode_rewards = episode
 
