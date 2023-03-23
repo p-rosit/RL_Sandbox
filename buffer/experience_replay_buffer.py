@@ -70,25 +70,20 @@ class PrioritizedExperienceReplayBuffer(AbstractBuffer):
             ind = rng.choice(episode.state.shape[0] - 1, episode_sample_amount, p=normalized_weights[episode_ind])
             self.inds.append(ind)
 
-            print(ind)
-            print(ind + trajectory_length)
-
-            indices = np.arange(ind, ind + trajectory_length)
-
-            print(indices)
-
-            # print(episode)
-            # print(ind)
-            error(':)')
-
             episode_states, episode_actions, episode_rewards = episode
 
-            if episode_states.shape[0] > ind + trajectory_length:
-                states = episode_states[ind:(ind+trajectory_length+1)]
-            else:
-                states = episode_states[ind:(ind+trajectory_length)]
-            actions = episode_actions[ind:min(episode_actions.shape[0], ind+trajectory_length)]
-            rewards = episode_rewards[ind:min(episode_rewards.shape[0], ind+trajectory_length)]
+            states = [episode_states.take(ind + i, axis=0, mode='clip')[None, ...] for i in range(trajectory_length)]
+            states = np.concatenate(states, axis=0)
+
+            actions = [episode_actions.take(ind + i, axis=0, mode='clip')[None, ...] for i in range(trajectory_length)]
+            actions = np.concatenate(actions)
+
+            rewards = [episode_rewards.take(ind + i, axis=0, mode='clip')[None, ...] for i in range(trajectory_length)]
+            rewards = np.concatenate(rewards)
+
+            # print(states.shape)
+            # print(actions.shape)
+            # print(rewards.shape)
 
             trajectories.append(Experience(states, actions, rewards))
 
